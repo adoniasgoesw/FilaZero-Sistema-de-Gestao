@@ -1,3 +1,4 @@
+// server.js (produção)
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
@@ -5,12 +6,12 @@ import cors from 'cors';
 import db from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 
-dotenv.config({ path: '.env.production' }); // usa env.production
+dotenv.config(); // usa o mesmo .env
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS só para o domínio da Netlify (frontend hospedado)
+// CORS configurado para o frontend da Netlify
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || 'https://filazero.netlify.app',
   optionsSuccessStatus: 200,
@@ -22,7 +23,7 @@ app.use(express.json());
 app.use('/api', authRoutes);
 
 app.get('/', (req, res) => {
-  res.send('API em produção está funcionando ✅');
+  res.send('🚀 API de produção está rodando com sucesso!');
 });
 
 app.listen(PORT, () => {
