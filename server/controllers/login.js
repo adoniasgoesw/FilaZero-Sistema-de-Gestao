@@ -42,6 +42,7 @@ export const loginUser = async (req, res) => {
         whatsapp: user.whatsapp,
         cpf: user.cpf,
         cargo: user.cargo,
+        estabelecimento_id: user.estabelecimento_id,
       },
       token,
     });

@@ -20,14 +20,26 @@ const FormLogin = ({ isOpen, onClose, onSwitchToRegister }) => {
     e.preventDefault();
     setLoadingStatus('loading');
     setErrorMessage(null);
-
+  
     try {
       const response = await api.post('/login', formData);
+  
+      const { user } = response.data; // pegando o objeto user retornado
+      if (user) {
+        // Salvar dados no localStorage
+        localStorage.setItem('userId', user.id);
+        localStorage.setItem('estabelecimentoId', user.estabelecimento_id);
+        // Cache completo do usuário (nome, cargo, etc.)
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+  
       setLoadingStatus('success');
-      setErrorMessage(`Bem vindo, ${response.data.user.nome_completo}!`);
+      setErrorMessage(`Bem vindo, ${user.nome_completo}!`);
+  
       onClose();
       setFormData({ cpf: '', senha: '' });
-      // Salve token/user info aqui se precisar
+  
+      // Redirecionar para Home
       window.location.href = '/home';
     } catch (error) {
       setLoadingStatus('error');
@@ -38,6 +50,7 @@ const FormLogin = ({ isOpen, onClose, onSwitchToRegister }) => {
       }
     }
   };
+  
 
   return (
     <ModalBase isOpen={isOpen} onClose={onClose}>

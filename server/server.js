@@ -5,6 +5,8 @@ import cors from 'cors';
 
 import db from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config(); // usa o mesmo .env
 
@@ -19,6 +21,11 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Configurar pasta uploads para servir arquivos estáticos
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api', authRoutes);
 
