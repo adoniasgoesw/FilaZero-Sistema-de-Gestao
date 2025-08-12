@@ -1,6 +1,11 @@
 import db from '../config/db.js';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const serverRoot = path.join(__dirname, '..');
 
 // Listar produtos por estabelecimento
 export const getProdutos = async (req, res) => {
@@ -84,7 +89,7 @@ export const createProduto = async (req, res) => {
 
     let imagem_produto = null;
     if (imagem) {
-      const uploadsDir = path.join(process.cwd(), 'uploads', 'produtos');
+      const uploadsDir = path.join(serverRoot, 'uploads', 'produtos');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }

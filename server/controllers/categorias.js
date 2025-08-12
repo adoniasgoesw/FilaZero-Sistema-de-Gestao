@@ -1,6 +1,12 @@
 import db from '../config/db.js';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// Resolve raiz do servidor para unificar diretório de uploads em dev e prod
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const serverRoot = path.join(__dirname, '..');
 
 // Buscar todas as categorias de um estabelecimento
 export const getCategorias = async (req, res) => {
@@ -71,7 +77,7 @@ export const createCategoria = async (req, res) => {
 
     // Processar upload da imagem se existir
     if (imagem) {
-      const uploadsDir = path.join(process.cwd(), 'uploads', 'categorias');
+      const uploadsDir = path.join(serverRoot, 'uploads', 'categorias');
       
       // Criar diretório se não existir
       if (!fs.existsSync(uploadsDir)) {
@@ -159,13 +165,13 @@ export const updateCategoria = async (req, res) => {
         try {
           const maybeUrl = new URL(categoria.imagem_url, `${req.protocol}://${req.get('host')}`);
           const pathname = maybeUrl.pathname.startsWith('/') ? maybeUrl.pathname.slice(1) : maybeUrl.pathname;
-          const oldImagePath = path.join(process.cwd(), pathname);
+          const oldImagePath = path.join(serverRoot, pathname);
           if (fs.existsSync(oldImagePath)) {
             fs.unlinkSync(oldImagePath);
           }
         } catch (_) {
           const rel = categoria.imagem_url.startsWith('/') ? categoria.imagem_url.slice(1) : categoria.imagem_url;
-          const oldImagePath = path.join(process.cwd(), rel);
+          const oldImagePath = path.join(serverRoot, rel);
           if (fs.existsSync(oldImagePath)) {
             fs.unlinkSync(oldImagePath);
           }
@@ -231,13 +237,13 @@ export const deleteCategoria = async (req, res) => {
       try {
         const maybeUrl = new URL(categoria.imagem_url, `${req.protocol}://${req.get('host')}`);
         const pathname = maybeUrl.pathname.startsWith('/') ? maybeUrl.pathname.slice(1) : maybeUrl.pathname;
-        const imagePath = path.join(process.cwd(), pathname);
+        const imagePath = path.join(serverRoot, pathname);
         if (fs.existsSync(imagePath)) {
           fs.unlinkSync(imagePath);
         }
       } catch (_) {
         const rel = categoria.imagem_url.startsWith('/') ? categoria.imagem_url.slice(1) : categoria.imagem_url;
-        const imagePath = path.join(process.cwd(), rel);
+        const imagePath = path.join(serverRoot, rel);
         if (fs.existsSync(imagePath)) {
           fs.unlinkSync(imagePath);
         }
