@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/layout/Footer";
-import HeaderApp from "../../components/layout/HeaderApp";
 import Sidebar from "../../components/layout/Sidebar";
 import SearchBar from "../../components/layout/SearchBar";
 import ModalBase from "../../components/modals/Base";
@@ -143,9 +142,8 @@ const Usuarios = () => {
   return (
     <div className="min-h-screen flex bg-gray-100">
       <Sidebar />
-      <div className="flex-1 lg:ml-64">
-        <HeaderApp />
-        <main className="pt-20 pb-16 lg:pb-0 px-4 lg:px-6">
+      <div className="flex-1" style={{ marginLeft: 'var(--sidebar-w, 16rem)' }}>
+        <main className="py-6 px-4 lg:px-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
             <button
               onClick={() => navigate("/config")}
@@ -155,7 +153,12 @@ const Usuarios = () => {
               <span>Voltar</span>
             </button>
             <div className="lg:w-96">
-              <SearchBar value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <SearchBar
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                rightButtonType="filter"
+                onRightButtonClick={() => alert('Filtros: A-Z, Z-A, Mais recentes, Mais antigos')}
+              />
             </div>
           </div>
 
@@ -168,14 +171,7 @@ const Usuarios = () => {
             onDelete={handleDelete}
           />
 
-          <Paginator
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={filtered.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            className="mt-8"
-          />
+          {/* Paginator removido conforme solicitação */}
 
           <ModalBase isOpen={isAddModalOpen} onClose={handleClose}>
             <FormUsuario onSubmit={handleSave} onCancel={handleClose} />

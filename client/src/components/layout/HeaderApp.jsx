@@ -25,7 +25,7 @@ const HeaderApp = () => {
   }, []);
 
   return (
-    <header className="bg-white px-6 py-2 shadow-sm flex justify-between items-center fixed top-0 left-0 w-full z-50">
+    <header className="bg-white px-6 py-2 shadow-sm flex justify-between items-center fixed top-0 z-50" style={{ left: 'var(--sidebar-w, 0px)', width: 'calc(100% - var(--sidebar-w, 0px))' }}>
   {/* Logo */}
   <h1 className="text-2xl font-bold tracking-wider text-[#1A99BA] select-none">
     FILA ZERO

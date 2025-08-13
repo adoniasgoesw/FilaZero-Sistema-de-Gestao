@@ -1,7 +1,7 @@
 import React from "react";
-import { Search, Settings } from "lucide-react";
+import { Search, Settings, Filter } from "lucide-react";
 
-const SearchBar = ({ value, onChange }) => {
+const SearchBar = ({ value, onChange, rightButtonType = "filter", onRightButtonClick }) => {
   return (
     <div className="flex items-center space-x-3 p-4 bg-white rounded-lg shadow-sm">
       {/* Barra de pesquisa */}
@@ -16,10 +16,16 @@ const SearchBar = ({ value, onChange }) => {
         />
       </div>
       
-      {/* Botão de configurações */}
-      <button className="p-2 rounded-lg bg-[#1A99BA] text-white hover:bg-[#0f5f73] transition-colors duration-200">
-        <Settings className="w-5 h-5" />
-      </button>
+      {/* Botão à direita: config (Home) ou filtro (demais páginas) */}
+      {rightButtonType === 'config' ? (
+        <button onClick={onRightButtonClick} className="p-2 rounded-lg bg-[#1A99BA] text-white hover:bg-[#0f5f73] transition-colors duration-200" title="Configurações">
+          <Settings className="w-5 h-5" />
+        </button>
+      ) : (
+        <button onClick={onRightButtonClick} className="p-2 rounded-lg bg-[#1A99BA] text-white hover:bg-[#0f5f73] transition-colors duration-200" title="Filtros">
+          <Filter className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 };

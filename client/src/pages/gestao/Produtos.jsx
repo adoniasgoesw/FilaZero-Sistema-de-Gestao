@@ -219,7 +219,7 @@ const Produtos = () => {
       <Sidebar />
       
       {/* Conteúdo principal */}
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1" style={{ marginLeft: 'var(--sidebar-w, 16rem)' }}>
         <HeaderApp />
         
         {/* Conteúdo da página */}
@@ -235,7 +235,12 @@ const Produtos = () => {
             </button>
 
             <div className="lg:w-96">
-              <SearchBar value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <SearchBar
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                rightButtonType="filter"
+                onRightButtonClick={() => alert('Filtros: A-Z, Z-A, Mais recentes, Mais antigos')}
+              />
             </div>
           </div>
 
@@ -250,15 +255,7 @@ const Produtos = () => {
             onDelete={handleDeleteProduto}
           />
 
-          {/* Paginator */}
-          <Paginator
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={filtered.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            className="mt-8"
-          />
+          {/* Paginator removido conforme solicitação */}
         </main>
 
         {/* Modal: Novo Produto */}

@@ -1,6 +1,5 @@
 import React from "react";
 import Footer from "../components/layout/Footer";
-import HeaderApp from "../components/layout/HeaderApp";
 import Sidebar from "../components/layout/Sidebar";
 
 const Delivery = () => {
@@ -10,11 +9,9 @@ const Delivery = () => {
       <Sidebar />
       
       {/* Conteúdo principal */}
-      <div className="flex-1 lg:ml-64">
-        <HeaderApp />
-        
+      <div className="flex-1" style={{ marginLeft: 'var(--sidebar-w, 16rem)' }}>
         {/* Conteúdo da página */}
-        <main className="pt-20 pb-16 lg:pb-0 px-4 lg:px-6">
+        <main className="py-6 px-4 lg:px-6">
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
             <h1 className="text-4xl font-bold text-[#1A99BA]">Página de delivery</h1>
           </div>

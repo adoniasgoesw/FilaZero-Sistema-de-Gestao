@@ -5,7 +5,6 @@ import Profile from "../components/details/Profile";
 import GestaoCards from "../components/cards/GestaoCards";
 import AdminCard from "../components/cards/AdminCard";
 import CaixaCard from "../components/cards/CaixaCard";
-import HeaderApp from "../components/layout/HeaderApp";
 import Sidebar from "../components/layout/Sidebar";
 
 const Config = () => {
@@ -15,11 +14,9 @@ const Config = () => {
       <Sidebar />
       
       {/* Conteúdo principal */}
-      <div className="flex-1 lg:ml-64">
-        <HeaderApp />
-
+      <div className="flex-1" style={{ marginLeft: 'var(--sidebar-w, 16rem)' }}>
         {/* Conteúdo da página */}
-        <main className="pt-20 pb-16 lg:pb-0 px-4 lg:px-6">
+        <main className="py-6 px-4 lg:px-6">
           {/* Título principal */}
           <h1 className="text-3xl font-bold text-[#1A99BA] mb-8">Ajustes</h1>
 

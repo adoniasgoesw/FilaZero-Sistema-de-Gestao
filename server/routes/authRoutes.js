@@ -33,6 +33,10 @@ import {
   updateFormaPagamento,
   deleteFormaPagamento,
 } from '../controllers/formasPagamento.js';
+import {
+  getPontosAtendimento,
+  upsertPontosAtendimento,
+} from '../controllers/pontosAtendimento.js';
 
 const router = express.Router();
 
@@ -81,6 +85,10 @@ router.get('/clientes/:estabelecimento_id', getClientes);
 router.post('/clientes', createCliente);
 router.put('/clientes/:id', updateCliente);
 router.delete('/clientes/:id', deleteCliente);
+
+// Pontos de atendimento (config + listagem derivada)
+router.get('/pontos-atendimento/:estabelecimento_id', getPontosAtendimento);
+router.put('/pontos-atendimento/:estabelecimento_id', upsertPontosAtendimento);
 
 // Formas de pagamento
 router.get('/formas-pagamento/:estabelecimento_id', getFormasPagamento);

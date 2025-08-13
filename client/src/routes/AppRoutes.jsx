@@ -10,6 +10,7 @@ import FormasPagamento from '../pages/gestao/FormasPagamento';
 import Clientes from '../pages/gestao/Clientes';
 import Categorias from '../pages/gestao/Categorias';
 import Produtos from '../pages/gestao/Produtos';
+import PontoAtendimento from '../pages/PontoAtendimento';
 
 
 const LendRoutes = () => {
@@ -17,6 +18,7 @@ const LendRoutes = () => {
     <Routes>
       <Route path="/" element={<LandPage />} />
       <Route path="/home" element={<Home />} />
+      <Route path="/ponto-atendimento" element={<PontoAtendimento />} />
       <Route path="/delivery" element={<Delivery />} />
       <Route path="/config" element={<Config />} />
       <Route path="/historic" element={<Historic />} />
