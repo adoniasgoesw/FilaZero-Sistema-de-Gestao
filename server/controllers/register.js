@@ -1,5 +1,6 @@
 import db from '../config/db.js';
 import bcrypt from 'bcryptjs';
+import { getFormasPagamento } from './formasPagamento.js';
 
 // Registro: cria estabelecimento e usuário vinculando o estabelecimento
 export const register = async (req, res) => {
@@ -77,6 +78,14 @@ export const register = async (req, res) => {
        RETURNING id, nome_completo, email, whatsapp, cpf`,
       [estabelecimento_id, nome_completo.trim(), email.trim(), whatsapp || null, cpf.trim(), hashedPassword]
     );
+
+    // Seed formas de pagamento padrão para o estabelecimento recém-criado
+    try {
+      // Reutiliza o caminho do GET, que semeia por estabelecimento quando necessário
+      await getFormasPagamento({ params: { estabelecimento_id } }, { status: () => ({ json: () => {} }) });
+    } catch (_) {
+      // ignora seed falho; não impede registro
+    }
 
     return res.status(201).json({
       message: 'Usuário registrado com sucesso.',

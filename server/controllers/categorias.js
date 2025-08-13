@@ -232,6 +232,39 @@ export const deleteCategoria = async (req, res) => {
 
     const categoria = categoriaExistente.rows[0];
 
+    // Remover produtos desta categoria (inclui remoção de imagens dos produtos)
+    try {
+      const produtosDaCategoria = await db.query(
+        'SELECT id_produto, imagem_produto FROM produtos WHERE id_categoria = $1',
+        [id]
+      );
+
+      for (const produto of produtosDaCategoria.rows) {
+        if (produto.imagem_produto) {
+          try {
+            const maybeUrl = new URL(produto.imagem_produto, `${req.protocol}://${req.get('host')}`);
+            const pathname = maybeUrl.pathname.startsWith('/') ? maybeUrl.pathname.slice(1) : maybeUrl.pathname;
+            const imagePath = path.join(serverRoot, pathname);
+            if (fs.existsSync(imagePath)) {
+              fs.unlinkSync(imagePath);
+            }
+          } catch (_) {
+            const rel = produto.imagem_produto.startsWith('/') ? produto.imagem_produto.slice(1) : produto.imagem_produto;
+            const imagePath = path.join(serverRoot, rel);
+            if (fs.existsSync(imagePath)) {
+              fs.unlinkSync(imagePath);
+            }
+          }
+        }
+      }
+
+      // Apagar produtos do banco
+      await db.query('DELETE FROM produtos WHERE id_categoria = $1', [id]);
+    } catch (prodErr) {
+      console.error('Erro ao remover produtos da categoria:', prodErr);
+      // Continua para remover a categoria mesmo assim
+    }
+
     // Remover imagem se existir (suporta URL absoluta ou relativa)
     if (categoria.imagem_url) {
       try {

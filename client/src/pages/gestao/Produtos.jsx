@@ -16,6 +16,7 @@ const Produtos = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [produtoEmEdicao, setProdutoEmEdicao] = useState(null);
 
   const [estabelecimentoId, setEstabelecimentoId] = useState(() => Number(localStorage.getItem('estabelecimentoId')) || null);
@@ -37,12 +38,18 @@ const Produtos = () => {
         setCategorias(catsRes.data.categorias || []);
         const produtosMapeados = (prodsRes.data.produtos || []).map(p => ({
           id: p.id_produto,
+          id_estabelecimento: p.id_estabelecimento,
+          id_categoria: p.id_categoria,
           nome: p.nome_produto,
           precoVenda: p.valor_venda,
           precoCompra: p.valor_custo,
           categoria: p.categoria_nome,
           estoque: p.estoque_qtd,
           imagem: p.imagem_produto,
+          habilita_estoque: p.habilita_estoque,
+          habilita_tempo_preparo: p.habilita_tempo_preparo,
+          tempo_preparo_min: p.tempo_preparo_min,
+          codigo_pdv: p.codigo_pdv,
         }));
         setAllProdutos(produtosMapeados);
       } catch (e) {
@@ -83,6 +90,7 @@ const Produtos = () => {
 
   const handleCloseModal = () => {
     setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
     setProdutoEmEdicao(null);
   };
 
@@ -110,18 +118,98 @@ const Produtos = () => {
       const prodsRes = await api.get(`/produtos/${estabelecimentoId}`);
       const produtosMapeados = (prodsRes.data.produtos || []).map(p => ({
         id: p.id_produto,
+        id_estabelecimento: p.id_estabelecimento,
+        id_categoria: p.id_categoria,
         nome: p.nome_produto,
         precoVenda: p.valor_venda,
         precoCompra: p.valor_custo,
         categoria: p.categoria_nome,
         estoque: p.estoque_qtd,
         imagem: p.imagem_produto,
+        habilita_estoque: p.habilita_estoque,
+        habilita_tempo_preparo: p.habilita_tempo_preparo,
+        tempo_preparo_min: p.tempo_preparo_min,
+        codigo_pdv: p.codigo_pdv,
       }));
       setAllProdutos(produtosMapeados);
       handleCloseModal();
     } catch (e) {
       console.error('Erro ao salvar produto:', e);
       alert('Erro ao salvar produto. Tente novamente.');
+    }
+  };
+
+  const handleEditProduto = (produto) => {
+    setProdutoEmEdicao(produto);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteProduto = async (produto) => {
+    if (!window.confirm(`Tem certeza que deseja deletar o produto "${produto.nome}"?`)) return;
+    try {
+      await api.delete(`/produtos/${produto.id}`);
+      const prodsRes = await api.get(`/produtos/${estabelecimentoId}`);
+      const produtosMapeados = (prodsRes.data.produtos || []).map(p => ({
+        id: p.id_produto,
+        id_estabelecimento: p.id_estabelecimento,
+        id_categoria: p.id_categoria,
+        nome: p.nome_produto,
+        precoVenda: p.valor_venda,
+        precoCompra: p.valor_custo,
+        categoria: p.categoria_nome,
+        estoque: p.estoque_qtd,
+        imagem: p.imagem_produto,
+        habilita_estoque: p.habilita_estoque,
+        habilita_tempo_preparo: p.habilita_tempo_preparo,
+        tempo_preparo_min: p.tempo_preparo_min,
+        codigo_pdv: p.codigo_pdv,
+      }));
+      setAllProdutos(produtosMapeados);
+      alert('Produto deletado com sucesso!');
+    } catch (e) {
+      console.error('Erro ao deletar produto:', e);
+      alert('Erro ao deletar produto. Tente novamente.');
+    }
+  };
+
+  const handleUpdateProduto = async (payload) => {
+    try {
+      if (!produtoEmEdicao) return;
+
+      const formData = new FormData();
+      if (payload.id_categoria) formData.append('id_categoria', payload.id_categoria);
+      if (payload.nome) formData.append('nome_produto', payload.nome);
+      if (payload.precoVenda !== undefined) formData.append('valor_venda', payload.precoVenda);
+      if (payload.precoCompra !== undefined) formData.append('valor_custo', payload.precoCompra);
+      if (payload.habilita_estoque !== undefined) formData.append('habilita_estoque', payload.habilita_estoque);
+      if (payload.estoque_qtd !== undefined) formData.append('estoque_qtd', payload.estoque_qtd);
+      if (payload.habilita_tempo_preparo !== undefined) formData.append('habilita_tempo_preparo', payload.habilita_tempo_preparo);
+      if (payload.tempo_preparo_min !== undefined) formData.append('tempo_preparo_min', payload.tempo_preparo_min);
+      if (payload.imagemFile) formData.append('imagem', payload.imagemFile);
+
+      await api.put(`/produtos/${produtoEmEdicao.id}`, formData);
+
+      const prodsRes = await api.get(`/produtos/${estabelecimentoId}`);
+      const produtosMapeados = (prodsRes.data.produtos || []).map(p => ({
+        id: p.id_produto,
+        id_estabelecimento: p.id_estabelecimento,
+        id_categoria: p.id_categoria,
+        nome: p.nome_produto,
+        precoVenda: p.valor_venda,
+        precoCompra: p.valor_custo,
+        categoria: p.categoria_nome,
+        estoque: p.estoque_qtd,
+        imagem: p.imagem_produto,
+        habilita_estoque: p.habilita_estoque,
+        habilita_tempo_preparo: p.habilita_tempo_preparo,
+        tempo_preparo_min: p.tempo_preparo_min,
+        codigo_pdv: p.codigo_pdv,
+      }));
+      setAllProdutos(produtosMapeados);
+      handleCloseModal();
+    } catch (e) {
+      console.error('Erro ao atualizar produto:', e);
+      alert('Erro ao atualizar produto. Tente novamente.');
     }
   };
 
@@ -155,7 +243,12 @@ const Produtos = () => {
           <h1 className="text-3xl font-bold text-[#1A99BA] mb-6">📦 Produtos</h1>
 
           {/* Listagem */}
-          <ListagemProdutos produtos={pageItems} onAdd={handleAddProduto} />
+          <ListagemProdutos 
+            produtos={pageItems} 
+            onAdd={handleAddProduto}
+            onEdit={handleEditProduto}
+            onDelete={handleDeleteProduto}
+          />
 
           {/* Paginator */}
           <Paginator
@@ -171,6 +264,16 @@ const Produtos = () => {
         {/* Modal: Novo Produto */}
         <ModalBase isOpen={isAddModalOpen} onClose={handleCloseModal}>
           <FormProduto onSubmit={handleSaveProduto} onCancel={handleCloseModal} categorias={categorias} />
+        </ModalBase>
+
+        {/* Modal: Editar Produto */}
+        <ModalBase isOpen={isEditModalOpen} onClose={handleCloseModal}>
+          <FormProduto 
+            onSubmit={handleUpdateProduto} 
+            onCancel={handleCloseModal} 
+            categorias={categorias}
+            initialValues={produtoEmEdicao}
+          />
         </ModalBase>
         
         {/* Footer apenas para telas pequenas */}

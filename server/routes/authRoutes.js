@@ -11,8 +11,28 @@ import {
 } from '../controllers/categorias.js';
 import { 
   getProdutos,
-  createProduto
+  createProduto,
+  updateProduto,
+  deleteProduto
 } from '../controllers/produtos.js';
+import {
+  getUsuarios,
+  createUsuario,
+  updateUsuario,
+  deleteUsuario,
+} from '../controllers/usuarios.js';
+import {
+  getClientes,
+  createCliente,
+  updateCliente,
+  deleteCliente,
+} from '../controllers/clientes.js';
+import {
+  getFormasPagamento,
+  createFormaPagamento,
+  updateFormaPagamento,
+  deleteFormaPagamento,
+} from '../controllers/formasPagamento.js';
 
 const router = express.Router();
 
@@ -47,5 +67,25 @@ router.delete('/categorias/:id', deleteCategoria);
 // Rotas de produtos
 router.get('/produtos/:id_estabelecimento', getProdutos);
 router.post('/produtos', upload.single('imagem'), createProduto);
+router.put('/produtos/:id_produto', upload.single('imagem'), updateProduto);
+router.delete('/produtos/:id_produto', deleteProduto);
+
+// Rotas de usuários
+router.get('/usuarios/:estabelecimento_id', getUsuarios);
+router.post('/usuarios', createUsuario);
+router.put('/usuarios/:id', updateUsuario);
+router.delete('/usuarios/:id', deleteUsuario);
+
+// Rotas de clientes
+router.get('/clientes/:estabelecimento_id', getClientes);
+router.post('/clientes', createCliente);
+router.put('/clientes/:id', updateCliente);
+router.delete('/clientes/:id', deleteCliente);
+
+// Formas de pagamento
+router.get('/formas-pagamento/:estabelecimento_id', getFormasPagamento);
+router.post('/formas-pagamento', createFormaPagamento);
+router.put('/formas-pagamento/:id', updateFormaPagamento);
+router.delete('/formas-pagamento/:id', deleteFormaPagamento);
 
 export default router;
