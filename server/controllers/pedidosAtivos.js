@@ -64,12 +64,11 @@ export const criarPedidoAtivo = async (req, res) => {
         // Se já existe, atualiza para "ocupada" (tem itens)
         const updateRes = await db.query(
           `UPDATE pontos_atendimento_pedidos 
-           SET nome_ponto = $1, status = 'ocupada', usuario_id = $2, atualizado_em = CURRENT_TIMESTAMP
-           WHERE id = $3
+           SET nome_ponto = $1, status = 'ocupada', atualizado_em = CURRENT_TIMESTAMP
+           WHERE id = $2
            RETURNING id`,
           [
             nome_pedido || `Pedido ${identificacao_ponto}`,
-            userId,
             existingPontoRes.rows[0].id
           ]
         );
@@ -78,15 +77,14 @@ export const criarPedidoAtivo = async (req, res) => {
         // Se não existe, insere novo com status "ocupada" (tem itens)
         const pontoRes = await db.query(
           `INSERT INTO pontos_atendimento_pedidos (
-            estabelecimento_id, identificacao, nome_ponto, status, usuario_id
-          ) VALUES ($1, $2, $3, $4, $5)
+            estabelecimento_id, identificacao, nome_ponto, status
+          ) VALUES ($1, $2, $3, $4)
           RETURNING id`,
           [
             estId,
             identificacao_ponto,
             nome_pedido || `Pedido ${identificacao_ponto}`,
-            'ocupada',
-            userId
+            'ocupada'
           ]
         );
         pontoAtendimentoId = pontoRes.rows[0].id;
@@ -436,7 +434,6 @@ export const excluirPedido = async (req, res) => {
       `UPDATE pontos_atendimento_pedidos 
        SET nome_ponto = '', 
            status = 'Disponível', 
-           usuario_id = NULL, 
            criado_em = NULL,  -- Zera o tempo de abertura
            atualizado_em = CURRENT_TIMESTAMP
        WHERE id = $1`,
@@ -470,31 +467,72 @@ export const excluirPedido = async (req, res) => {
 
 // Nova função para abrir um ponto de atendimento (mudar para "em atendimento")
 export const abrirPontoAtendimento = async (req, res) => {
-  const { estabelecimento_id, identificacao_ponto, usuario_id } = req.body;
+  const { estabelecimento_id, identificacao_ponto } = req.body;
   
-  if (!estabelecimento_id || !identificacao_ponto || !usuario_id) {
+  if (!estabelecimento_id || !identificacao_ponto) {
     return res.status(400).json({ 
-      message: 'estabelecimento_id, identificacao_ponto e usuario_id são obrigatórios.' 
+      message: 'estabelecimento_id e identificacao_ponto são obrigatórios.' 
     });
   }
 
   try {
-    // Verifica se o ponto já está sendo atendido por outro usuário
-    const pontoEmAtendimentoRes = await db.query(
-      `SELECT id, usuario_id, status 
-       FROM pontos_atendimento_pedidos 
-       WHERE estabelecimento_id = $1 AND identificacao = $2 AND status = 'em_atendimento'`,
+    // Primeiro verifica disponibilidade e corrige status travados automaticamente
+    const disponibilidadeRes = await db.query(
+      `SELECT pap.id, pap.status, pap.criado_em, pap.atualizado_em,
+               p.valor_total, p.id as pedido_id
+       FROM pontos_atendimento_pedidos pap
+       LEFT JOIN pedidos p ON pap.id = p.ponto_atendimento_id 
+         AND p.status_pedido IN ('pendente', 'em_preparo', 'pronto')
+       WHERE pap.estabelecimento_id = $1 AND pap.identificacao = $2`,
       [estabelecimento_id, identificacao_ponto]
     );
 
-    if (pontoEmAtendimentoRes.rows.length > 0) {
-      const ponto = pontoEmAtendimentoRes.rows[0];
-      if (ponto.usuario_id !== Number(usuario_id)) {
-        return res.status(423).json({ 
-          message: 'Ponto de atendimento já está sendo usado por outro usuário.',
-          bloqueado: true,
-          usuario_atual: ponto.usuario_id
-        });
+    if (disponibilidadeRes.rows.length > 0) {
+      const ponto = disponibilidadeRes.rows[0];
+      
+      // Verifica timeout para status "em_atendimento" (2 minutos)
+      if (ponto.status === 'em_atendimento') {
+        const agora = new Date();
+        const ultimaAtualizacao = new Date(ponto.atualizado_em || ponto.criado_em);
+        const diffMinutos = (agora - ultimaAtualizacao) / (1000 * 60);
+        
+        if (diffMinutos > 2) {
+          // Timeout detectado - corrige automaticamente
+          console.log(`🔄 Timeout detectado ao abrir ${identificacao_ponto}: ${diffMinutos.toFixed(1)} minutos`);
+          
+          let novoStatus = 'Disponível';
+          if (ponto.pedido_id && ponto.valor_total > 0) {
+            novoStatus = 'aberto';
+          }
+          
+          // Corrige o status automaticamente
+          await db.query(
+            `UPDATE pontos_atendimento_pedidos 
+             SET status = $1, atualizado_em = CURRENT_TIMESTAMP
+             WHERE id = $2`,
+            [novoStatus, ponto.id]
+          );
+          
+          console.log(`✅ Status corrigido para ${novoStatus}: ${identificacao_ponto}`);
+          
+          // Se foi corrigido para disponível/aberto, permite acesso
+          if (novoStatus === 'Disponível' || novoStatus === 'aberto') {
+            // Continua com a abertura
+          } else {
+            return res.status(423).json({ 
+              message: 'Ponto de atendimento ainda não está disponível.',
+              bloqueado: true,
+              status: novoStatus
+            });
+          }
+        } else {
+          // Ainda está em atendimento válido
+          return res.status(423).json({ 
+            message: 'Ponto de atendimento já está sendo usado por outro usuário.',
+            bloqueado: true,
+            status: 'em_atendimento'
+          });
+        }
       }
     }
 
@@ -507,28 +545,27 @@ export const abrirPontoAtendimento = async (req, res) => {
     );
 
     if (existingPontoRes.rows.length > 0) {
-      // Atualiza status para "em atendimento"
+      // Atualiza status para "em atendimento" (sem usuario_id)
       const updateRes = await db.query(
         `UPDATE pontos_atendimento_pedidos 
-         SET status = 'em_atendimento', usuario_id = $1, atualizado_em = CURRENT_TIMESTAMP
-         WHERE id = $2
+         SET status = 'em_atendimento', atualizado_em = CURRENT_TIMESTAMP
+         WHERE id = $1
          RETURNING id`,
-        [usuario_id, existingPontoRes.rows[0].id]
+        [existingPontoRes.rows[0].id]
       );
       pontoAtendimentoId = updateRes.rows[0].id;
     } else {
-      // Cria novo ponto com status "em atendimento"
+      // Cria novo ponto com status "em atendimento" (sem usuario_id)
       const pontoRes = await db.query(
         `INSERT INTO pontos_atendimento_pedidos (
-          estabelecimento_id, identificacao, nome_ponto, status, usuario_id
-        ) VALUES ($1, $2, $3, $4, $5)
+          estabelecimento_id, identificacao, nome_ponto, status
+        ) VALUES ($1, $2, $3, $4)
         RETURNING id`,
         [
           estabelecimento_id,
           identificacao_ponto,
           `Ponto ${identificacao_ponto}`,
-          'em_atendimento',
-          usuario_id
+          'em_atendimento'
         ]
       );
       pontoAtendimentoId = pontoRes.rows[0].id;
@@ -548,11 +585,11 @@ export const abrirPontoAtendimento = async (req, res) => {
 
 // Nova função para fechar um ponto de atendimento (mudar para "aberto" ou "disponível")
 export const fecharPontoAtendimento = async (req, res) => {
-  const { estabelecimento_id, identificacao_ponto, usuario_id } = req.body;
+  const { estabelecimento_id, identificacao_ponto } = req.body;
   
-  if (!estabelecimento_id || !identificacao_ponto || !usuario_id) {
+  if (!estabelecimento_id || !identificacao_ponto) {
     return res.status(400).json({ 
-      message: 'estabelecimento_id, identificacao_ponto e usuario_id são obrigatórios.' 
+      message: 'estabelecimento_id e identificacao_ponto são obrigatórios.' 
     });
   }
 
@@ -573,39 +610,36 @@ export const fecharPontoAtendimento = async (req, res) => {
 
     const ponto = pontoRes.rows[0];
     
-    // Verifica se o usuário atual é quem está atendendo
-    if (ponto.usuario_id !== Number(usuario_id)) {
-      return res.status(403).json({ 
-        message: 'Apenas o usuário que está atendendo pode fechar este ponto.' 
+    // Verifica se o ponto está realmente em atendimento
+    if (ponto.status !== 'em_atendimento') {
+      return res.status(400).json({ 
+        message: 'Este ponto não está em atendimento no momento.' 
       });
     }
 
     // Determina o novo status baseado no estado atual
     let novoStatus = 'Disponível';
     let nomePonto = '';
-    let usuarioId = null;
     let criadoEm = null;
 
     if (ponto.pedido_id && ponto.valor_total > 0) {
       // Se tem pedido com valor, mantém como "aberto"
       novoStatus = 'aberto';
       nomePonto = `Ponto ${identificacao_ponto}`;
-      usuarioId = usuario_id;
       criadoEm = new Date();
     } else {
       // Se não tem pedido ou valor é zero, volta para "disponível"
       novoStatus = 'Disponível';
       nomePonto = '';
-      usuarioId = null;
       criadoEm = null;
     }
 
-    // Atualiza o status
+    // Atualiza o status (sem usuario_id)
     await db.query(
       `UPDATE pontos_atendimento_pedidos 
-       SET status = $1, nome_ponto = $2, usuario_id = $3, criado_em = $4, atualizado_em = CURRENT_TIMESTAMP
-       WHERE id = $5`,
-      [novoStatus, nomePonto, usuarioId, criadoEm, ponto.id]
+       SET status = $1, nome_ponto = $2, criado_em = $3, atualizado_em = CURRENT_TIMESTAMP
+       WHERE id = $4`,
+      [novoStatus, nomePonto, criadoEm, ponto.id]
     );
 
     return res.status(200).json({
@@ -632,8 +666,8 @@ export const verificarDisponibilidadePonto = async (req, res) => {
 
   try {
     const pontoRes = await db.query(
-      `SELECT pap.id, pap.status, pap.usuario_id, pap.criado_em,
-              p.valor_total, p.id as pedido_id, p.data_abertura
+      `SELECT pap.id, pap.status, pap.criado_em, pap.atualizado_em,
+               p.valor_total, p.id as pedido_id, p.data_abertura
        FROM pontos_atendimento_pedidos pap
        LEFT JOIN pedidos p ON pap.id = p.ponto_atendimento_id 
          AND p.status_pedido IN ('pendente', 'em_preparo', 'pronto')
@@ -654,16 +688,35 @@ export const verificarDisponibilidadePonto = async (req, res) => {
     
     // Determina o status real baseado nas regras de negócio
     let statusReal = ponto.status;
+    let statusAlterado = false;
     
     if (ponto.status === 'em_atendimento') {
-      // Verifica se ainda está sendo atendido (timeout de 5 minutos)
+      // Verifica se ainda está sendo atendido (timeout de 2 minutos - mais agressivo)
       const agora = new Date();
       const ultimaAtualizacao = new Date(ponto.atualizado_em || ponto.criado_em);
       const diffMinutos = (agora - ultimaAtualizacao) / (1000 * 60);
       
-      if (diffMinutos > 5) {
-        // Timeout - considera como abandonado
-        statusReal = 'aberto';
+      if (diffMinutos > 2) { // Reduzido para 2 minutos
+        // Timeout - considera como abandonado e corrige automaticamente
+        console.log(`🔄 Timeout detectado para ${identificacao_ponto}: ${diffMinutos.toFixed(1)} minutos`);
+        
+        // Determina o novo status baseado no estado atual
+        let novoStatus = 'Disponível';
+        if (ponto.pedido_id && ponto.valor_total > 0) {
+          novoStatus = 'aberto';
+        }
+        
+        // Atualiza o status automaticamente
+        await db.query(
+          `UPDATE pontos_atendimento_pedidos 
+           SET status = $1, atualizado_em = CURRENT_TIMESTAMP
+           WHERE id = $2`,
+          [novoStatus, ponto.id]
+        );
+        
+        statusReal = novoStatus;
+        statusAlterado = true;
+        console.log(`✅ Status corrigido para ${novoStatus}: ${identificacao_ponto}`);
       }
     }
 
@@ -673,7 +726,7 @@ export const verificarDisponibilidadePonto = async (req, res) => {
     return res.status(200).json({
       disponivel,
       status: statusReal,
-      usuario_atual: ponto.usuario_id,
+      status_alterado: statusAlterado,
       pedido_id: ponto.pedido_id,
       valor_total: ponto.valor_total,
       data_abertura: ponto.data_abertura,
@@ -683,6 +736,71 @@ export const verificarDisponibilidadePonto = async (req, res) => {
   } catch (error) {
     console.error('Erro ao verificar disponibilidade:', error);
     return res.status(500).json({ message: 'Erro interno ao verificar disponibilidade.' });
+  }
+};
+
+// Nova função para limpar todos os status travados
+export const limparStatusTravados = async (req, res) => {
+  const { estabelecimento_id } = req.params;
+  
+  if (!estabelecimento_id) {
+    return res.status(400).json({ 
+      message: 'estabelecimento_id é obrigatório.' 
+    });
+  }
+
+  try {
+    console.log('🧹 Iniciando limpeza de status travados...');
+    
+    // Busca todos os pontos com status "em_atendimento"
+    const pontosTravadosRes = await db.query(
+      `SELECT pap.id, pap.identificacao, pap.criado_em, pap.atualizado_em,
+               p.valor_total, p.id as pedido_id
+       FROM pontos_atendimento_pedidos pap
+       LEFT JOIN pedidos p ON pap.id = p.ponto_atendimento_id 
+         AND p.status_pedido IN ('pendente', 'em_preparo', 'pronto')
+       WHERE pap.estabelecimento_id = $1 AND pap.status = 'em_atendimento'`,
+      [estabelecimento_id]
+    );
+
+    let pontosCorrigidos = 0;
+    
+    for (const ponto of pontosTravadosRes.rows) {
+      const agora = new Date();
+      const ultimaAtualizacao = new Date(ponto.atualizado_em || ponto.criado_em);
+      const diffMinutos = (agora - ultimaAtualizacao) / (1000 * 60);
+      
+      // Se passou mais de 1 minuto, considera travado
+      if (diffMinutos > 1) {
+        let novoStatus = 'Disponível';
+        if (ponto.pedido_id && ponto.valor_total > 0) {
+          novoStatus = 'aberto';
+        }
+        
+        // Corrige o status
+        await db.query(
+          `UPDATE pontos_atendimento_pedidos 
+           SET status = $1, atualizado_em = CURRENT_TIMESTAMP
+           WHERE id = $2`,
+          [novoStatus, ponto.id]
+        );
+        
+        pontosCorrigidos++;
+        console.log(`✅ ${ponto.identificacao}: ${novoStatus} (${diffMinutos.toFixed(1)}min)`);
+      }
+    }
+
+    console.log(`🧹 Limpeza concluída: ${pontosCorrigidos} pontos corrigidos`);
+    
+    return res.status(200).json({
+      message: 'Limpeza de status travados concluída com sucesso.',
+      pontos_corrigidos: pontosCorrigidos,
+      total_pontos_travados: pontosTravadosRes.rows.length
+    });
+
+  } catch (error) {
+    console.error('Erro ao limpar status travados:', error);
+    return res.status(500).json({ message: 'Erro interno ao limpar status travados.' });
   }
 };
 

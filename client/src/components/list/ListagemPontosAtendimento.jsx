@@ -14,7 +14,8 @@ const ListagemPontosAtendimento = ({ pontos, estabelecimentoId, onOpen }) => {
     abrirPonto,
     fecharPonto,
     getStatusPonto,
-    isPontoEmAtendimento
+    isPontoEmAtendimento,
+    limparStatusTravados
   } = useStatusPontosAtendimento(estabelecimentoId);
 
 
@@ -134,7 +135,7 @@ const ListagemPontosAtendimento = ({ pontos, estabelecimentoId, onOpen }) => {
       'Disponível': 'bg-gray-100 text-gray-700',
       'aberto': 'bg-yellow-100 text-yellow-700',
       'ocupada': 'bg-green-100 text-green-700',
-      'em_atendimento': 'bg-blue-100 text-blue-700'
+      'em_atendimento': 'bg-purple-100 text-purple-700'
     };
 
     const config = statusConfig[status] || 'bg-gray-100 text-gray-700';

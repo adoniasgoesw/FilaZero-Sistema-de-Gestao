@@ -45,7 +45,8 @@ import {
   excluirPedido,
   abrirPontoAtendimento,
   fecharPontoAtendimento,
-  verificarDisponibilidadePonto
+  verificarDisponibilidadePonto,
+  limparStatusTravados
 } from '../controllers/pedidosAtivos.js';
 
 const router = express.Router();
@@ -123,5 +124,6 @@ router.get('/pontos-atendimento-ativos/:estabelecimento_id', getTodosPontosAtend
 router.post('/pontos-atendimento/abrir', abrirPontoAtendimento);
 router.post('/pontos-atendimento/fechar', fecharPontoAtendimento);
 router.get('/pontos-atendimento/disponibilidade/:estabelecimento_id/:identificacao_ponto', verificarDisponibilidadePonto);
+router.post('/pontos-atendimento/limpar-travados/:estabelecimento_id', limparStatusTravados);
 
 export default router;

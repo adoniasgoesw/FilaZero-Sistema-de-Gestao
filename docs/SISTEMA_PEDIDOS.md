@@ -260,7 +260,7 @@ O sistema mantém compatibilidade com:
 - **🟢 Disponível**: Verde (sem pedido ativo, pronta para uso)
 - **🟡 Aberto**: Amarelo (foi acessada mas sem itens)
 - **🔴 Ocupada**: Vermelho (com pedido ativo e itens)
-- **🔵 Em Atendimento**: Azul (usuário acessando no momento)
+- **🟣 Em Atendimento**: Roxa (usuário acessando no momento)
 
 ### 4. **Dados exibidos**
 - **Identificação**: Mesa 01, CMD 02, etc.
@@ -332,3 +332,5 @@ Para mais detalhes sobre o sistema de status, consulte:
 - **Prevenção de conflitos** entre usuários
 - **Status visual claro** com cores distintas
 - **Operação automática** sem necessidade de configuração manual
+- **Sistema simplificado** sem dependência de colunas de usuário
+- **Bloqueio automático** baseado apenas no status

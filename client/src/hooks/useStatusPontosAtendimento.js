@@ -3,20 +3,18 @@ import api from '../services/api';
 
 export const useStatusPontosAtendimento = (estabelecimentoId) => {
   const [pontosEmAtendimento, setPontosEmAtendimento] = useState(new Set());
-  const [usuarioAtual] = useState(JSON.parse(localStorage.getItem('user')));
 
   // Função para abrir um ponto de atendimento
   const abrirPonto = useCallback(async (identificacao) => {
-    if (!usuarioAtual?.id || !estabelecimentoId) {
-      console.error('Usuário ou estabelecimento não encontrado');
+    if (!estabelecimentoId) {
+      console.error('Estabelecimento não encontrado');
       return false;
     }
 
     try {
       const response = await api.post('/pontos-atendimento/abrir', {
         estabelecimento_id: estabelecimentoId,
-        identificacao_ponto: identificacao,
-        usuario_id: usuarioAtual.id
+        identificacao_ponto: identificacao
       });
 
       if (response.status === 200) {
@@ -32,20 +30,19 @@ export const useStatusPontosAtendimento = (estabelecimentoId) => {
       throw new Error('Erro ao abrir ponto de atendimento.');
     }
     return false;
-  }, [estabelecimentoId, usuarioAtual]);
+  }, [estabelecimentoId]);
 
   // Função para fechar um ponto de atendimento
   const fecharPonto = useCallback(async (identificacao) => {
-    if (!usuarioAtual?.id || !estabelecimentoId) {
-      console.error('Usuário ou estabelecimento não encontrado');
+    if (!estabelecimentoId) {
+      console.error('Estabelecimento não encontrado');
       return false;
     }
 
     try {
       const response = await api.post('/pontos-atendimento/fechar', {
         estabelecimento_id: estabelecimentoId,
-        identificacao_ponto: identificacao,
-        usuario_id: usuarioAtual.id
+        identificacao_ponto: identificacao
       });
 
       if (response.status === 200) {
@@ -61,7 +58,7 @@ export const useStatusPontosAtendimento = (estabelecimentoId) => {
       throw new Error('Erro ao fechar ponto de atendimento.');
     }
     return false;
-  }, [estabelecimentoId, usuarioAtual]);
+  }, [estabelecimentoId]);
 
   // Função para verificar se um ponto está disponível
   const verificarDisponibilidade = useCallback(async (identificacao) => {
@@ -102,7 +99,7 @@ export const useStatusPontosAtendimento = (estabelecimentoId) => {
     setPontosEmAtendimento(new Set());
   }, []);
 
-  // Atualiza o status dos pontos a cada 30 segundos para detectar timeouts
+  // Atualiza o status dos pontos a cada 15 segundos para detectar timeouts (mais agressivo)
   useEffect(() => {
     const interval = setInterval(async () => {
       if (pontosEmAtendimento.size > 0) {
@@ -124,10 +121,28 @@ export const useStatusPontosAtendimento = (estabelecimentoId) => {
           }
         }
       }
-    }, 30000); // 30 segundos
+    }, 15000); // 15 segundos (mais agressivo)
 
     return () => clearInterval(interval);
   }, [pontosEmAtendimento, verificarDisponibilidade]);
+
+  // Função para limpar status travados (útil para debug)
+  const limparStatusTravados = useCallback(async () => {
+    if (!estabelecimentoId) return false;
+
+    try {
+      const response = await api.post(`/pontos-atendimento/limpar-travados/${estabelecimentoId}`);
+      if (response.status === 200) {
+        console.log('🧹 Status travados limpos:', response.data);
+        // Limpa todos os pontos em atendimento localmente
+        setPontosEmAtendimento(new Set());
+        return true;
+      }
+    } catch (error) {
+      console.error('Erro ao limpar status travados:', error);
+    }
+    return false;
+  }, [estabelecimentoId]);
 
   return {
     pontosEmAtendimento,
@@ -136,6 +151,7 @@ export const useStatusPontosAtendimento = (estabelecimentoId) => {
     verificarDisponibilidade,
     getStatusPonto,
     limparPontosEmAtendimento,
+    limparStatusTravados,
     isPontoEmAtendimento: (identificacao) => pontosEmAtendimento.has(identificacao)
   };
 };

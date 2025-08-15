@@ -39,13 +39,13 @@ O sistema implementa um controle automático de status para pontos de atendiment
 - **Cor**: Vermelho
 - **Ação permitida**: Pode ser acessada pelo usuário que criou o pedido
 
-### 4. **Em Atendimento** 🔵
+### 4. **Em Atendimento** 🟣
 - **Quando ocorre**: Usuário está acessando a mesa no momento
 - **Características**:
   - Bloqueia acesso de outros usuários
   - Status temporário (até usuário sair)
   - Timeout automático após 5 minutos de inatividade
-- **Cor**: Azul
+- **Cor**: Roxa
 - **Ação permitida**: Apenas o usuário que está atendendo pode acessar
 
 ## Fluxo de Transições
@@ -70,16 +70,26 @@ Usuário remove todos os itens → Disponível
    - Muda status para "em_atendimento"
    - Verifica se não está sendo usado por outro usuário
    - Retorna erro 423 se bloqueado
+   - **Não depende mais da coluna `usuario_id`**
 
 2. **`fecharPontoAtendimento`**
    - Determina novo status baseado no estado atual
    - Se tem itens: mantém como "aberto"
    - Se não tem itens: volta para "disponível"
+   - **Não depende mais da coluna `usuario_id`**
 
 3. **`verificarDisponibilidadePonto`**
    - Verifica status atual do ponto
    - Implementa timeout de 5 minutos para "em_atendimento"
    - Retorna informações de disponibilidade
+   - **Não depende mais da coluna `usuario_id`**
+
+#### Mudanças Técnicas Importantes:
+
+- **Removida dependência da coluna `usuario_id`**
+- **Sistema baseado apenas no status** para controle de acesso
+- **Bloqueio automático** quando status = 'em_atendimento'
+- **Liberação automática** quando usuário sai (timeout ou fechamento)
 
 #### Rotas Adicionadas:
 
@@ -132,8 +142,8 @@ GET /api/pontos-atendimento/disponibilidade/:estabelecimento_id/:identificacao_p
 ### 4. **Validações**
 - Usuário deve estar logado
 - Estabelecimento deve ter caixa aberto
-- Apenas usuário que abriu pode fechar
-- Verificações de permissão em todas as operações
+- **Sistema baseado apenas no status** (não depende de usuario_id)
+- Verificações de disponibilidade em todas as operações
 
 ## Exemplos de Uso
 
