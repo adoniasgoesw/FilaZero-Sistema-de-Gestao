@@ -1,0 +1,8 @@
+export const formatTime = (iso) => {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  } catch (_) {
+    return "--:--";
+  }
+};

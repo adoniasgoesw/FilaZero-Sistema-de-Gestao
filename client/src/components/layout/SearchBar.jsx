@@ -17,11 +17,12 @@ const SearchBar = ({ value, onChange, rightButtonType = "filter", onRightButtonC
       </div>
       
       {/* Botão à direita: config (Home) ou filtro (demais páginas) */}
-      {rightButtonType === 'config' ? (
+      {rightButtonType === 'config' && (
         <button onClick={onRightButtonClick} className="p-2 rounded-lg bg-[#1A99BA] text-white hover:bg-[#0f5f73] transition-colors duration-200" title="Configurações">
           <Settings className="w-5 h-5" />
         </button>
-      ) : (
+      )}
+      {rightButtonType === 'filter' && (
         <button onClick={onRightButtonClick} className="p-2 rounded-lg bg-[#1A99BA] text-white hover:bg-[#0f5f73] transition-colors duration-200" title="Filtros">
           <Filter className="w-5 h-5" />
         </button>

@@ -37,6 +37,16 @@ import {
   getPontosAtendimento,
   upsertPontosAtendimento,
 } from '../controllers/pontosAtendimento.js';
+import { getCaixas, abrirCaixa, fecharCaixa, adicionarEntrada, adicionarSaida } from '../controllers/caixas.js';
+import { 
+  criarPedidoAtivo, 
+  getPedidoAtivoPorPonto, 
+  getTodosPontosAtendimento, 
+  excluirPedido,
+  abrirPontoAtendimento,
+  fecharPontoAtendimento,
+  verificarDisponibilidadePonto
+} from '../controllers/pedidosAtivos.js';
 
 const router = express.Router();
 
@@ -95,5 +105,23 @@ router.get('/formas-pagamento/:estabelecimento_id', getFormasPagamento);
 router.post('/formas-pagamento', createFormaPagamento);
 router.put('/formas-pagamento/:id', updateFormaPagamento);
 router.delete('/formas-pagamento/:id', deleteFormaPagamento);
+
+// Caixas
+router.get('/caixas/:estabelecimento_id', getCaixas);
+router.post('/caixas', abrirCaixa);
+router.put('/caixas/:id', fecharCaixa);
+router.post('/caixas/:id/entrada', adicionarEntrada);
+router.post('/caixas/:id/saida', adicionarSaida);
+
+// Pedidos ativos
+router.post('/pedidos-ativos', criarPedidoAtivo);
+router.post('/pedidos-ativos/excluir', excluirPedido); // Rota específica primeiro
+router.get('/pedidos-ativos/:estabelecimento_id/:ponto_id', getPedidoAtivoPorPonto);
+router.get('/pontos-atendimento-ativos/:estabelecimento_id', getTodosPontosAtendimento);
+
+// Gerenciamento de status dos pontos de atendimento
+router.post('/pontos-atendimento/abrir', abrirPontoAtendimento);
+router.post('/pontos-atendimento/fechar', fecharPontoAtendimento);
+router.get('/pontos-atendimento/disponibilidade/:estabelecimento_id/:identificacao_ponto', verificarDisponibilidadePonto);
 
 export default router;

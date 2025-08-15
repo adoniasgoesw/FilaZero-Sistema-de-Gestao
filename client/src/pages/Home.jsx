@@ -8,6 +8,7 @@ import ListagemPontosAtendimento from "../components/list/ListagemPontosAtendime
 import { useNavigate } from "react-router-dom";
 import React, { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
+import Notification from "../components/elements/Notification";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ const Home = () => {
   const [estabelecimentoId, setEstabelecimentoId] = useState(() => Number(localStorage.getItem('estabelecimentoId')) || null);
   const [pontos, setPontos] = useState([]);
   const [config, setConfig] = useState(null);
+  const [hasOpenCash, setHasOpenCash] = useState(true);
+  const [showCashClosedNotif, setShowCashClosedNotif] = useState(false);
 
   useEffect(() => {
     const id = estabelecimentoId || Number(localStorage.getItem('estabelecimentoId'));
@@ -23,15 +26,48 @@ const Home = () => {
     setEstabelecimentoId(id);
     (async () => {
       try {
-        // GET também semeia defaults se não existir
-        const res = await api.get(`/pontos-atendimento/${id}`);
-        setPontos(res.data.pontos || []);
-        setConfig(res.data.config || null);
+        // Busca pontos de atendimento ativos (com pedidos)
+        const pontosAtivosRes = await api.get(`/pontos-atendimento-ativos/${id}`);
+        setPontos(pontosAtivosRes.data.pontos || []);
+        
+        // Busca configuração dos pontos
+        const configRes = await api.get(`/pontos-atendimento/${id}`);
+        setConfig(configRes.data.config || null);
       } catch (e) {
         console.error('Erro ao carregar pontos de atendimento:', e);
       }
+      // Verifica situação do caixa
+      try {
+        const caixasRes = await api.get(`/caixas/${id}`);
+        const caixas = caixasRes.data.caixas || [];
+        const open = caixas.some(c => c.caixa_aberto);
+        setHasOpenCash(open);
+        setShowCashClosedNotif(!open);
+      } catch (e) {
+        console.error('Erro ao verificar caixas:', e);
+      }
     })();
   }, []);
+
+  // Listener para recarregar dados quando um pedido for salvo
+  useEffect(() => {
+    const recarregarDados = async () => {
+      if (!estabelecimentoId) return;
+      try {
+        const pontosAtivosRes = await api.get(`/pontos-atendimento-ativos/${estabelecimentoId}`);
+        setPontos(pontosAtivosRes.data.pontos || []);
+      } catch (e) {
+        console.error('Erro ao recarregar pontos de atendimento:', e);
+      }
+    };
+
+    // Escuta evento de pedido salvo
+    window.addEventListener('pedido:salvo', recarregarDados);
+    
+    return () => {
+      window.removeEventListener('pedido:salvo', recarregarDados);
+    };
+  }, [estabelecimentoId]);
 
   const filtered = useMemo(() => {
     if (!searchTerm) return pontos;
@@ -41,6 +77,18 @@ const Home = () => {
   const openPonto = (ponto) => navigate("/ponto-atendimento", { state: { ponto } });
   return (
     <div className="min-h-screen flex bg-gray-100">
+      {showCashClosedNotif && (
+        <Notification
+          title="Caixa fechado"
+          message={<div>
+            Você não pode acessar mesas ou fazer pedidos com o caixa fechado. Abra o caixa para continuar.
+          </div>}
+          confirmText="Abrir caixa"
+          cancelText="OK"
+          onConfirm={() => { window.location.href = '/historic'; }}
+          onCancel={() => setShowCashClosedNotif(false)}
+        />
+      )}
       {/* Sidebar para telas grandes */}
       <Sidebar />
       
@@ -59,7 +107,11 @@ const Home = () => {
           </div>
           
           {/* Conteúdo principal: Listagem de Pontos de Atendimento */}
-          <ListagemPontosAtendimento pontos={filtered} onOpen={openPonto} />
+          <ListagemPontosAtendimento 
+            pontos={filtered} 
+            estabelecimentoId={estabelecimentoId}
+            onOpen={openPonto} 
+          />
         </main>
         
         {/* Modal de Configuração dos Pontos de Atendimento */}
