@@ -526,11 +526,13 @@ export const abrirPontoAtendimento = async (req, res) => {
             });
           }
         } else {
-          // Ainda está em atendimento válido
+          // Ainda está em atendimento válido - BLOQUEIA MESMO SENDO A MESMA CONTA
+          console.log(`🔒 Ponto ${identificacao_ponto} bloqueado - já está em atendimento`);
           return res.status(423).json({ 
-            message: 'Ponto de atendimento já está sendo usado por outro usuário.',
+            message: 'Ponto de atendimento já está sendo usado em outra tela/dispositivo.',
             bloqueado: true,
-            status: 'em_atendimento'
+            status: 'em_atendimento',
+            motivo: 'sessao_ativa'
           });
         }
       }
@@ -574,7 +576,9 @@ export const abrirPontoAtendimento = async (req, res) => {
     return res.status(200).json({
       message: 'Ponto de atendimento aberto com sucesso.',
       ponto_atendimento_id: pontoAtendimentoId,
-      status: 'em_atendimento'
+      status: 'em_atendimento',
+      identificacao: identificacao_ponto,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
@@ -610,29 +614,24 @@ export const fecharPontoAtendimento = async (req, res) => {
 
     const ponto = pontoRes.rows[0];
     
+    console.log(`🔍 Ponto ${identificacao_ponto} - Status atual: ${ponto.status}`);
+    
     // Verifica se o ponto está realmente em atendimento
     if (ponto.status !== 'em_atendimento') {
+      console.log(`❌ Ponto ${identificacao_ponto} não está em atendimento. Status: ${ponto.status}`);
       return res.status(400).json({ 
-        message: 'Este ponto não está em atendimento no momento.' 
+        message: `Este ponto não está em atendimento no momento. Status atual: ${ponto.status}` 
       });
     }
 
     // Determina o novo status baseado no estado atual
-    let novoStatus = 'Disponível';
-    let nomePonto = '';
-    let criadoEm = null;
+    let novoStatus = 'aberto'; // SEMPRE mantém como "aberto" quando sai
+    let nomePonto = `Ponto ${identificacao_ponto}`;
+    let criadoEm = new Date();
 
-    if (ponto.pedido_id && ponto.valor_total > 0) {
-      // Se tem pedido com valor, mantém como "aberto"
-      novoStatus = 'aberto';
-      nomePonto = `Ponto ${identificacao_ponto}`;
-      criadoEm = new Date();
-    } else {
-      // Se não tem pedido ou valor é zero, volta para "disponível"
-      novoStatus = 'Disponível';
-      nomePonto = '';
-      criadoEm = null;
-    }
+    // IMPORTANTE: Quando sai da mesa, SEMPRE mantém como "Aberta"
+    // O status só muda para "Disponível" quando o pedido é EXCLUÍDO
+    // O status só muda para "Ocupada" quando um item é ADICIONADO
 
     // Atualiza o status (sem usuario_id)
     await db.query(
@@ -642,15 +641,119 @@ export const fecharPontoAtendimento = async (req, res) => {
       [novoStatus, nomePonto, criadoEm, ponto.id]
     );
 
+    console.log(`✅ Ponto ${identificacao_ponto} fechado - status: ${novoStatus}`);
+
     return res.status(200).json({
       message: 'Ponto de atendimento fechado com sucesso.',
       novo_status: novoStatus,
-      ponto_atendimento_id: ponto.id
+      ponto_atendimento_id: ponto.id,
+      identificacao: identificacao_ponto,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
     console.error('Erro ao fechar ponto de atendimento:', error);
     return res.status(500).json({ message: 'Erro interno ao fechar ponto de atendimento.' });
+  }
+};
+
+// Nova função para manter o status "em atendimento" ativo (heartbeat)
+export const manterPontoAtivo = async (req, res) => {
+  const { estabelecimento_id, identificacao_ponto } = req.body;
+  
+  if (!estabelecimento_id || !identificacao_ponto) {
+    return res.status(400).json({ 
+      message: 'estabelecimento_id e identificacao_ponto são obrigatórios.' 
+    });
+  }
+
+  try {
+    // Atualiza apenas o timestamp para manter o ponto ativo
+    const resultado = await db.query(
+      `UPDATE pontos_atendimento_pedidos 
+       SET atualizado_em = CURRENT_TIMESTAMP
+       WHERE estabelecimento_id = $1 AND identificacao = $2 AND status = 'em_atendimento'
+       RETURNING id`,
+      [estabelecimento_id, identificacao_ponto]
+    );
+
+    if (resultado.rows.length === 0) {
+      return res.status(404).json({ 
+        message: 'Ponto de atendimento não encontrado ou não está em atendimento.' 
+      });
+    }
+
+    return res.status(200).json({
+      message: 'Ponto mantido ativo com sucesso.',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Erro ao manter ponto ativo:', error);
+    return res.status(500).json({ message: 'Erro interno ao manter ponto ativo.' });
+  }
+};
+
+// Nova função para marcar um ponto como "Aberta" (após primeiro acesso)
+export const marcarPontoComoAberta = async (req, res) => {
+  const { estabelecimento_id, identificacao_ponto } = req.body;
+  
+  if (!estabelecimento_id || !identificacao_ponto) {
+    return res.status(400).json({ 
+      message: 'estabelecimento_id e identificacao_ponto são obrigatórios.' 
+    });
+  }
+
+  try {
+    // Busca o ponto de atendimento
+    const pontoRes = await db.query(
+      `SELECT id, status FROM pontos_atendimento_pedidos 
+       WHERE estabelecimento_id = $1 AND identificacao = $2`,
+      [estabelecimento_id, identificacao_ponto]
+    );
+
+    let pontoAtendimentoId;
+
+    if (pontoRes.rows.length > 0) {
+      // Atualiza status para "aberto" (sem usuario_id)
+      const updateRes = await db.query(
+        `UPDATE pontos_atendimento_pedidos 
+         SET status = 'aberto', atualizado_em = CURRENT_TIMESTAMP
+         WHERE id = $1
+         RETURNING id`,
+        [pontoRes.rows[0].id]
+      );
+      pontoAtendimentoId = updateRes.rows[0].id;
+    } else {
+      // Cria novo ponto com status "aberto" (sem usuario_id)
+      const pontoRes = await db.query(
+        `INSERT INTO pontos_atendimento_pedidos (
+          estabelecimento_id, identificacao, nome_ponto, status
+        ) VALUES ($1, $2, $3, $4)
+        RETURNING id`,
+        [
+          estabelecimento_id,
+          identificacao_ponto,
+          `Ponto ${identificacao_ponto}`,
+          'aberto'
+        ]
+      );
+      pontoAtendimentoId = pontoRes.rows[0].id;
+    }
+
+    console.log(`✅ Ponto ${identificacao_ponto} marcado como Aberta`);
+
+    return res.status(200).json({
+      message: 'Ponto de atendimento marcado como Aberta com sucesso.',
+      ponto_atendimento_id: pontoAtendimentoId,
+      status: 'aberto',
+      identificacao: identificacao_ponto,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Erro ao marcar ponto como Aberta:', error);
+    return res.status(500).json({ message: 'Erro interno ao marcar ponto como Aberta.' });
   }
 };
 

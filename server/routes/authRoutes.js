@@ -46,7 +46,9 @@ import {
   abrirPontoAtendimento,
   fecharPontoAtendimento,
   verificarDisponibilidadePonto,
-  limparStatusTravados
+  limparStatusTravados,
+  manterPontoAtivo,
+  marcarPontoComoAberta
 } from '../controllers/pedidosAtivos.js';
 
 const router = express.Router();
@@ -97,7 +99,15 @@ router.post('/clientes', createCliente);
 router.put('/clientes/:id', updateCliente);
 router.delete('/clientes/:id', deleteCliente);
 
-// Pontos de atendimento (config + listagem derivada)
+// Gerenciamento de status dos pontos de atendimento (ROTAS ESPECÍFICAS PRIMEIRO!)
+router.post('/pontos-atendimento/abrir', abrirPontoAtendimento);
+router.post('/pontos-atendimento/fechar', fecharPontoAtendimento);
+router.get('/pontos-atendimento/disponibilidade/:estabelecimento_id/:identificacao_ponto', verificarDisponibilidadePonto);
+router.post('/pontos-atendimento/limpar-travados/:estabelecimento_id', limparStatusTravados);
+router.post('/pontos-atendimento/keep-alive', manterPontoAtivo);
+router.post('/pontos-atendimento/marcar-aberta', marcarPontoComoAberta);
+
+// Pontos de atendimento (config + listagem derivada) - ROTAS COM PARÂMETROS DEPOIS
 router.get('/pontos-atendimento/:estabelecimento_id', getPontosAtendimento);
 router.put('/pontos-atendimento/:estabelecimento_id', upsertPontosAtendimento);
 
@@ -119,11 +129,5 @@ router.post('/pedidos-ativos', criarPedidoAtivo);
 router.post('/pedidos-ativos/excluir', excluirPedido); // Rota específica primeiro
 router.get('/pedidos-ativos/:estabelecimento_id/:ponto_id', getPedidoAtivoPorPonto);
 router.get('/pontos-atendimento-ativos/:estabelecimento_id', getTodosPontosAtendimento);
-
-// Gerenciamento de status dos pontos de atendimento
-router.post('/pontos-atendimento/abrir', abrirPontoAtendimento);
-router.post('/pontos-atendimento/fechar', fecharPontoAtendimento);
-router.get('/pontos-atendimento/disponibilidade/:estabelecimento_id/:identificacao_ponto', verificarDisponibilidadePonto);
-router.post('/pontos-atendimento/limpar-travados/:estabelecimento_id', limparStatusTravados);
 
 export default router;

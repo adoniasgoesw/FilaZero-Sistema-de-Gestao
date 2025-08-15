@@ -95,9 +95,20 @@ const PontoAtendimento = () => {
   // Função para fechar o ponto de atendimento
   const fecharPontoAtendimento = async () => {
     try {
-      const identificacao = ponto?.nome || ponto?.ponto?.nome;
+      // Pega a identificação do ponto (mesa/comanda)
+      const identificacao = ponto?.identificacao || ponto?.ponto?.identificacao || ponto?.nome || ponto?.ponto?.nome;
+      
+      console.log('🔍 Tentando fechar ponto:', { 
+        ponto, 
+        identificacao,
+        estabelecimentoId: Number(localStorage.getItem('estabelecimentoId'))
+      });
+      
       if (identificacao) {
         await fecharPonto(identificacao);
+        console.log('✅ Ponto fechado com sucesso:', identificacao);
+      } else {
+        console.error('❌ Identificação do ponto não encontrada:', ponto);
       }
     } catch (error) {
       console.error('Erro ao fechar ponto de atendimento:', error);

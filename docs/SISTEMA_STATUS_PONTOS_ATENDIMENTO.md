@@ -17,7 +17,7 @@ O sistema implementa um controle automático de status para pontos de atendiment
 - **Cor**: Verde
 - **Ação permitida**: Pode ser aberta por qualquer usuário
 
-### 2. **Aberto** 🟡
+### 2. **Aberta** 🔵
 - **Quando ocorre**: Mesa foi acessada mas não tem itens
 - **Características**:
   - Foi acessada pelo usuário
@@ -25,7 +25,8 @@ O sistema implementa um controle automático de status para pontos de atendiment
   - Valor total = R$ 0,00
   - Tem data de abertura
   - Tem tempo de atividade
-- **Cor**: Amarelo
+  - **Cor azul** para diferenciar visualmente
+- **Cor**: Azul
 - **Ação permitida**: Pode ser acessada novamente pelo mesmo usuário
 
 ### 3. **Ocupada** 🔴
@@ -42,11 +43,13 @@ O sistema implementa um controle automático de status para pontos de atendiment
 ### 4. **Em Atendimento** 🟣
 - **Quando ocorre**: Usuário está acessando a mesa no momento
 - **Características**:
-  - Bloqueia acesso de outros usuários
+  - **Bloqueia acesso de TODOS** (mesmo usuário em outras telas)
   - Status temporário (até usuário sair)
-  - Timeout automático após 5 minutos de inatividade
+  - Timeout automático após 2 minutos de inatividade
+  - **Atualização em tempo real** entre todas as contas
+  - **Sistema de heartbeat** para manter status ativo
 - **Cor**: Roxa
-- **Ação permitida**: Apenas o usuário que está atendendo pode acessar
+- **Ação permitida**: Apenas a tela/dispositivo que está atendendo pode acessar
 
 ## Fluxo de Transições
 

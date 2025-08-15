@@ -32,6 +32,8 @@ console.log('  POST /api/pontos-atendimento/abrir');
 console.log('  POST /api/pontos-atendimento/fechar');
 console.log('  GET /api/pontos-atendimento/disponibilidade/:estabelecimento_id/:identificacao_ponto');
 console.log('  POST /api/pontos-atendimento/limpar-travados/:estabelecimento_id');
+console.log('  POST /api/pontos-atendimento/keep-alive');
+console.log('  POST /api/pontos-atendimento/marcar-aberta');
 
 app.get('/', (req, res) => {
   res.send('API está funcionando ✅');
@@ -50,7 +52,9 @@ app.get('/test', (req, res) => {
       'POST /api/pontos-atendimento/abrir',
       'POST /api/pontos-atendimento/fechar',
       'GET /api/pontos-atendimento/disponibilidade/:estabelecimento_id/:identificacao_ponto',
-      'POST /api/pontos-atendimento/limpar-travados/:estabelecimento_id'
+      'POST /api/pontos-atendimento/limpar-travados/:estabelecimento_id',
+      'POST /api/pontos-atendimento/keep-alive',
+      'POST /api/pontos-atendimento/marcar-aberta'
     ]
   });
 });

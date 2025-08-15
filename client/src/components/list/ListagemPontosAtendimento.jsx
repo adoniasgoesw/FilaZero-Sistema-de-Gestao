@@ -13,10 +13,14 @@ const ListagemPontosAtendimento = ({ pontos, estabelecimentoId, onOpen }) => {
     pontosEmAtendimento,
     abrirPonto,
     fecharPonto,
+    marcarPontoComoAberta,
     getStatusPonto,
     isPontoEmAtendimento,
-    limparStatusTravados
+    limparStatusTravados,
+    statusAtualizados
   } = useStatusPontosAtendimento(estabelecimentoId);
+
+
 
 
 
@@ -74,6 +78,12 @@ const ListagemPontosAtendimento = ({ pontos, estabelecimentoId, onOpen }) => {
     return () => clearInterval(interval);
   }, [pontos]);
 
+  // Força re-render quando statusAtualizados muda
+  useEffect(() => {
+    console.log('🔄 statusAtualizados mudou, forçando re-render:', statusAtualizados);
+    setMostrarToque(prev => !prev); // Força re-render
+  }, [statusAtualizados]);
+
   // Primeiro clique
   const handlePrimeiroClique = (ponto) => {
     setPontoSelecionado(ponto);
@@ -99,24 +109,51 @@ const ListagemPontosAtendimento = ({ pontos, estabelecimentoId, onOpen }) => {
             navigate(`/ponto-atendimento`, { state: { ponto } });
           }
         } else {
-          alert('Este ponto de atendimento já está sendo usado por outro usuário.');
+          alert('Este ponto de atendimento já está sendo usado em outra tela/dispositivo.');
         }
         return;
       }
 
-      // Tenta abrir o ponto de atendimento
-      try {
-        const aberto = await abrirPonto(ponto.identificacao);
-        if (aberto) {
-          // Se conseguiu abrir, navega para o ponto
-          if (onOpen) {
-            onOpen(ponto);
-          } else {
-            navigate(`/ponto-atendimento`, { state: { ponto } });
+      // Se está disponível, marca como "Aberta" e depois abre
+      if (statusAtual === 'Disponível') {
+        try {
+          // Primeiro marca como "Aberta"
+          await marcarPontoComoAberta(ponto.identificacao);
+          
+          // Depois abre o ponto (em atendimento)
+          const aberto = await abrirPonto(ponto.identificacao);
+          if (aberto) {
+            // Se conseguiu abrir, navega para o ponto
+            if (onOpen) {
+              onOpen(ponto);
+            } else {
+              navigate(`/ponto-atendimento`, { state: { ponto } });
+            }
           }
+        } catch (error) {
+          alert(error.message);
         }
-      } catch (error) {
-        alert(error.message);
+        return;
+      }
+
+      // Se está aberto, permite acesso direto (sem duplo clique)
+      if (statusAtual === 'aberto') {
+        if (onOpen) {
+          onOpen(ponto);
+        } else {
+          navigate(`/ponto-atendimento`, { state: { ponto } });
+        }
+        return;
+      }
+
+      // Se está ocupada, permite acesso direto
+      if (statusAtual === 'ocupada') {
+        if (onOpen) {
+          onOpen(ponto);
+        } else {
+          navigate(`/ponto-atendimento`, { state: { ponto } });
+        }
+        return;
       }
     }
   };
@@ -133,7 +170,7 @@ const ListagemPontosAtendimento = ({ pontos, estabelecimentoId, onOpen }) => {
   const StatusBadge = ({ status }) => {
     const statusConfig = {
       'Disponível': 'bg-gray-100 text-gray-700',
-      'aberto': 'bg-yellow-100 text-yellow-700',
+      'aberto': 'bg-blue-100 text-blue-700', // Cor azul para "Aberta"
       'ocupada': 'bg-green-100 text-green-700',
       'em_atendimento': 'bg-purple-100 text-purple-700'
     };
