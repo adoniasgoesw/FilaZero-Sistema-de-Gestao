@@ -98,7 +98,81 @@
   background-color: #2563eb;
 }
 
-/* Garantir que categorias não quebrem linha */
-.categorias-scroll > * {
-  flex-shrink: 0;
+/* Estilos para badges de contadores */
+.contador-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  z-index: 10;
+  animation: badge-appear 0.3s ease-out;
+}
+
+.contador-badge:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+@keyframes badge-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Botão de remoção de item */
+.remover-item-btn {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.remover-item-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Estado vazio para listagem de itens */
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #6b7280;
+}
+
+.empty-state p:first-child {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p:last-child {
+  font-size: 0.75rem;
+  color: #9ca3af;
 }

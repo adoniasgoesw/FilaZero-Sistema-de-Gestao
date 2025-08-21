@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit, ArrowLeft } from 'lucide-react';
 import BackButton from '../buttons/BackButton.jsx';
-import HistoryButton from '../buttons/HistoryButton.jsx';
 import ListagemItens from '../list/ListagemItens.jsx';
 import ListagemValores from '../list/ListagemValores.jsx';
 import AcrescimoButton from '../buttons/AcrescimoButton.jsx';
@@ -11,41 +10,70 @@ import ImprimirButton from '../buttons/ImprimirButton.jsx';
 import DeletarPedidoButton from '../buttons/DeletarPedidoButton.jsx';
 import AdicionarPagamentoButton from '../buttons/AdicionarPagamentoButton.jsx';
 
-const PainelDetalhes = ({ pontoId, onBackToItems }) => {
+const PainelDetalhes = ({ onBackToItems, itens = [], onItemUpdate }) => {
   const [nomePedido, setNomePedido] = useState('Pedro Silva');
-  
-  // Dados mockados para demonstração
-  const itens = [
-    {
-      id: 1,
-      nome: 'X-Burger',
-      quantidade: 2,
-      preco: 15.90
-    },
-    {
-      id: 2,
-      nome: 'Batata Frita',
-      quantidade: 1,
-      preco: 8.50
-    },
-    {
-      id: 3,
-      nome: 'Refrigerante Cola',
-      quantidade: 2,
-      preco: 5.50
-    }
-  ];
+  const [itensLocais, setItensLocais] = useState([]);
+  const [valorTotal, setValorTotal] = useState(0);
 
-  const valorTotal = itens.reduce((total, item) => total + (item.preco * item.quantidade), 0);
+  // Atualizar itens e valor total quando a prop itens mudar
+  useEffect(() => {
+    setItensLocais(itens);
+    const total = itens.reduce((sum, item) => sum + item.subtotal, 0);
+    setValorTotal(total);
+  }, [itens]);
+
+  // Função para reduzir quantidade de um item (usada pela lixeirinha)
+  const handleReduceItem = (produtoId) => {
+    const itemIndex = itensLocais.findIndex(item => item.produto_id === produtoId);
+    
+    if (itemIndex !== -1) {
+      const item = itensLocais[itemIndex];
+      
+      if (item.quantidade > 1) {
+        // Reduz quantidade em 1
+        const novosItens = [...itensLocais];
+        novosItens[itemIndex] = {
+          ...item,
+          quantidade: item.quantidade - 1,
+          subtotal: item.preco * (item.quantidade - 1)
+        };
+        
+        setItensLocais(novosItens);
+        
+        // Recalcular valor total
+        const novoTotal = novosItens.reduce((total, item) => total + item.subtotal, 0);
+        setValorTotal(novoTotal);
+        
+        // Notificar mudança para o Painel Itens (para atualizar contadores)
+        if (onItemUpdate) {
+          onItemUpdate(novosItens);
+        }
+      } else {
+        // Remove item completamente (quantidade = 0)
+        const novosItens = itensLocais.filter(item => item.produto_id !== produtoId);
+        setItensLocais(novosItens);
+        
+        // Recalcular valor total
+        const novoTotal = novosItens.reduce((total, item) => total + item.subtotal, 0);
+        setValorTotal(novoTotal);
+        
+        // Notificar mudança para o Painel Itens (para atualizar contadores)
+        if (onItemUpdate) {
+          onItemUpdate(novosItens);
+        }
+      }
+    }
+  };
 
   const handleDeleteItem = (itemId) => {
     console.log('Excluindo item:', itemId);
     // Implementar lógica de exclusão
-  };
-
-  const handleHistory = () => {
-    console.log('Abrindo histórico');
-    // Implementar lógica do histórico
+    const novosItens = itensLocais.filter(item => item.produto_id !== itemId);
+    setItensLocais(novosItens);
+    
+    // Recalcular valor total
+    const novoTotal = novosItens.reduce((total, item) => total + item.subtotal, 0);
+    setValorTotal(novoTotal);
   };
 
   const handleAcrescimo = () => {
@@ -70,12 +98,25 @@ const PainelDetalhes = ({ pontoId, onBackToItems }) => {
 
   const handleDeletarPedido = () => {
     console.log('Deletando pedido');
+    
     // Implementar lógica de exclusão
+    setItensLocais([]);
+    setValorTotal(0);
+    
+    // Notificar mudança para o Painel Itens
+    if (onItemUpdate) {
+      onItemUpdate([]);
+    }
   };
 
   const handleAdicionarPagamento = () => {
     console.log('Adicionando pagamento');
     // Implementar lógica de pagamento
+  };
+
+  // Função para editar nome do pedido
+  const handleEditarNome = (novoNome) => {
+    setNomePedido(novoNome);
   };
 
   return (
@@ -105,13 +146,12 @@ const PainelDetalhes = ({ pontoId, onBackToItems }) => {
               <input
                 type="text"
                 value={nomePedido}
-                onChange={(e) => setNomePedido(e.target.value)}
+                onChange={(e) => handleEditarNome(e.target.value)}
                 placeholder="Nome do pedido"
                 className="w-40 px-3 py-2 pr-8 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
               <Edit className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             </div>
-            <HistoryButton onClick={handleHistory} />
           </div>
         </div>
       </div>
@@ -119,7 +159,11 @@ const PainelDetalhes = ({ pontoId, onBackToItems }) => {
       {/* Conteúdo */}
       <div className="flex-1 p-3 overflow-y-auto">
         {/* Listagem de Itens */}
-        <ListagemItens itens={itens} onDeleteItem={handleDeleteItem} />
+        <ListagemItens 
+          itens={itensLocais} 
+          onDeleteItem={handleDeleteItem}
+          onReduceItem={handleReduceItem} // Função para reduzir quantidade
+        />
       </div>
 
       {/* Footer com Valores e Botões */}

@@ -1,7 +1,13 @@
 import React from 'react';
 import { Trash2 } from 'lucide-react';
 
-const ListagemItens = ({ itens, onDeleteItem }) => {
+const ListagemItens = ({ itens, onReduceItem }) => {
+  // Função para reduzir quantidade de um item
+  const handleReduceItem = (item) => {
+    if (onReduceItem) {
+      onReduceItem(item.produto_id);
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -20,7 +26,7 @@ const ListagemItens = ({ itens, onDeleteItem }) => {
           </thead>
           <tbody>
             {itens.map((item) => (
-              <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+              <tr key={item.produto_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                 <td className="py-1.5 px-2">
                   <span className="text-xs font-medium text-gray-900">{item.quantidade}</span>
                 </td>
@@ -29,14 +35,14 @@ const ListagemItens = ({ itens, onDeleteItem }) => {
                 </td>
                 <td className="py-1.5 px-2">
                   <span className="text-xs font-semibold text-green-600">
-                    R$ {(item.preco * item.quantidade).toFixed(2)}
+                    R$ {item.subtotal.toFixed(2)}
                   </span>
                 </td>
                 <td className="py-1.5 px-2">
                   <button
-                    onClick={() => onDeleteItem(item.id)}
+                    onClick={() => handleReduceItem(item)}
                     className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
-                    title="Excluir item"
+                    title="Reduzir quantidade"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -46,6 +52,14 @@ const ListagemItens = ({ itens, onDeleteItem }) => {
           </tbody>
         </table>
       </div>
+      
+      {/* Estado vazio quando não há itens */}
+      {itens.length === 0 && (
+        <div className="empty-state">
+          <p>Nenhum item adicionado ao pedido.</p>
+          <p>Volte ao painel de itens para adicionar produtos.</p>
+        </div>
+      )}
     </div>
   );
 };
