@@ -1,0 +1,104 @@
+#root {
+ 
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Estilos personalizados para esconder scrollbars */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Estilos para os painéis */
+.painel-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Garantir que os painéis não tenham scroll */
+.painel-container > * {
+  flex-shrink: 0;
+}
+
+.painel-container .flex-1 {
+  overflow: hidden;
+}
+
+/* Cards de produtos com altura fixa */
+.produto-card {
+  height: 6rem; /* 96px - altura fixa */
+  min-height: 6rem;
+}
+
+/* Scroll horizontal suave para categorias */
+.categorias-scroll {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 transparent;
+  padding-bottom: 20px;
+}
+
+.categorias-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.categorias-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.categorias-scroll::-webkit-scrollbar-thumb {
+  background-color: #3b82f6;
+  border-radius: 4px;
+  border: 1px solid #f3f4f6;
+}
+
+.categorias-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #2563eb;
+}
+
+/* Garantir que categorias não quebrem linha */
+.categorias-scroll > * {
+  flex-shrink: 0;
+}
