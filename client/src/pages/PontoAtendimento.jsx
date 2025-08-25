@@ -1,74 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar.jsx';
 import PainelDetalhes from '../components/panels/PainelDetalhes.jsx';
 import PainelItens from '../components/panels/PainelItens.jsx';
 
 const PontoAtendimento = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [itensAtuais, setItensAtuais] = useState([]);
+  const [reduceItemCallback, setReduceItemCallback] = useState(null);
+  const [showPainelDetalhes, setShowPainelDetalhes] = useState(false);
 
-  const handleSearchChange = (term) => {
-    setSearchTerm(term);
+  const formatarIdentificacao = (id) => {
+    if (!id) return "Mesa 1";
+    
+    if (id.toLowerCase().includes('mesa')) {
+      const numero = id.replace(/\D/g, '');
+      return numero ? `Mesa ${numero}` : "Mesa 1";
+    } else if (id.toLowerCase().includes('balcao')) {
+      return "Balcão";
+    } else {
+      return `Mesa ${id}`;
+    }
   };
 
-  const handleCancel = () => {
-    console.log('Cancelar operação');
-    // Limpar itens atuais
-    setItensAtuais([]);
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
   };
 
-  const handleSave = (pedido) => {
-    console.log('Salvar pedido:', pedido);
+  const handleItemUpdate = (novosItens) => {
+    setItensAtuais(novosItens);
   };
 
-  // Função para receber atualizações dos itens em tempo real
-  const handleItemUpdate = (itens) => {
-    console.log('Itens atualizados:', itens);
-    setItensAtuais(itens);
+  const handleReduceItemCallback = (callback) => {
+    setReduceItemCallback(() => callback);
   };
 
-  const handleInfo = () => {
-    // Em telas pequenas, alterna para o painel de detalhes
-    console.log('Informações');
+  const handleReduceItem = (produtoId) => {
+    if (reduceItemCallback) {
+      reduceItemCallback(produtoId);
+    }
   };
 
   const handleBackToItems = () => {
     // Em telas pequenas, volta para o painel de itens
-    console.log('Voltar para itens');
+    // Em telas grandes, vai para a página Home
+    if (window.innerWidth < 1024) { // lg breakpoint
+      setShowPainelDetalhes(false); // Volta para o painel de itens
+    } else {
+      navigate('/home'); // Em telas grandes, vai para Home
+    }
   };
 
+  const handleBackToHome = () => {
+    // Sempre vai para a página Home (usado pelo Painel Itens em telas pequenas)
+    navigate('/home');
+  };
+
+  const handleInfoClick = () => {
+    // Só funciona em telas pequenas - alterna para o painel de detalhes
+    setShowPainelDetalhes(true);
+  };
+
+  const identificacao = formatarIdentificacao(id);
+
   return (
-    <div className="h-screen bg-gray-50">
+    <div className="h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
-      
-      {/* Conteúdo principal */}
-      <div className="lg:ml-20 h-full">
-        <div className="px-4 sm:px-6 lg:px-8">
-          {/* Grid dos painéis - 30% detalhes, 70% itens */}
-          <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 h-[calc(100vh-2rem)] mt-4 mb-4">
-            {/* Painel Detalhes - lado esquerdo (30%) - SEMPRE VISÍVEL */}
-            <div className="lg:col-span-3">
-              <PainelDetalhes 
-                onBackToItems={handleBackToItems}
-                itens={itensAtuais}
-                onItemUpdate={handleItemUpdate}
-              />
-            </div>
-            
-            {/* Painel Itens - lado direito (70%) - SEMPRE VISÍVEL EM DESKTOP */}
-            <div className="lg:col-span-7">
-              <PainelItens
-                searchTerm={searchTerm}
-                onSearchChange={handleSearchChange}
-                onCancel={handleCancel}
-                onSave={handleSave}
-                onInfo={handleInfo}
-                onItemUpdate={handleItemUpdate}
-              />
-            </div>
-          </div>
+
+      {/* Conteúdo principal - Layout responsivo */}
+      <div className="lg:ml-20 h-full flex gap-4 p-4">
+        {/* Painel de Detalhes - Visível em telas grandes OU quando ativado em telas pequenas */}
+        <div className={`${showPainelDetalhes ? 'block' : 'hidden'} lg:block w-full lg:w-1/3 h-full transition-all duration-300`}>
+          <PainelDetalhes
+            identificacao={identificacao}
+            itens={itensAtuais}
+            onReduceItem={handleReduceItem}
+            onBackToItems={handleBackToItems}
+          />
+        </div>
+
+        {/* Painel de Itens - Sempre visível em telas grandes, condicional em telas pequenas */}
+        <div className={`${showPainelDetalhes ? 'hidden' : 'block'} lg:block w-full lg:w-2/3 h-full transition-all duration-300`}>
+          <PainelItens
+            searchTerm={searchTerm}
+            onSearchChange={handleSearchChange}
+            onItemUpdate={handleItemUpdate}
+            onReduceItemFromItens={handleReduceItemCallback}
+            onInfoClick={handleInfoClick}
+            onBackToHome={handleBackToHome}
+            showInfoButton={!showPainelDetalhes} // Só mostra o botão Info quando o painel de detalhes está escondido
+          />
         </div>
       </div>
     </div>

@@ -1,21 +1,35 @@
-#root {
- 
+/* Estilos gerais da aplicação */
+.App {
+  text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
 }
 
-@keyframes logo-spin {
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
   }
@@ -24,21 +38,7 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-/* Estilos personalizados para esconder scrollbars */
+/* Estilos para esconder barra de rolagem */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* Internet Explorer 10+ */
   scrollbar-width: none;  /* Firefox */
@@ -48,131 +48,21 @@
   display: none;  /* Safari and Chrome */
 }
 
-/* Estilos para os painéis */
+/* Estilos específicos para o ponto de atendimento */
+.ponto-atendimento-container {
+  position: relative;
+}
+
+.conteudo-principal {
+  position: relative;
+}
+
+.sidebar-container {
+  position: fixed;
+  z-index: 40;
+}
+
 .painel-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Garantir que os painéis não tenham scroll */
-.painel-container > * {
-  flex-shrink: 0;
-}
-
-.painel-container .flex-1 {
-  overflow: hidden;
-}
-
-/* Cards de produtos com altura fixa */
-.produto-card {
-  height: 6rem; /* 96px - altura fixa */
-  min-height: 6rem;
-}
-
-/* Scroll horizontal suave para categorias */
-.categorias-scroll {
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: #3b82f6 transparent;
-  padding-bottom: 20px;
-}
-
-.categorias-scroll::-webkit-scrollbar {
-  height: 8px;
-}
-
-.categorias-scroll::-webkit-scrollbar-track {
-  background: #f3f4f6;
-  border-radius: 4px;
-}
-
-.categorias-scroll::-webkit-scrollbar-thumb {
-  background-color: #3b82f6;
-  border-radius: 4px;
-  border: 1px solid #f3f4f6;
-}
-
-.categorias-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #2563eb;
-}
-
-/* Estilos para badges de contadores */
-.contador-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-  font-size: 0.75rem;
-  font-weight: bold;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-  z-index: 10;
-  animation: badge-appear 0.3s ease-out;
-}
-
-.contador-badge:hover {
-  transform: scale(1.1);
-  transition: transform 0.2s ease;
-}
-
-@keyframes badge-appear {
-  from {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Botão de remoção de item */
-.remover-item-btn {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-  font-size: 0.75rem;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-}
-
-.remover-item-btn:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
-
-/* Estado vazio para listagem de itens */
-.empty-state {
-  text-align: center;
-  padding: 2rem 1rem;
-  color: #6b7280;
-}
-
-.empty-state p:first-child {
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
-}
-
-.empty-state p:last-child {
-  font-size: 0.75rem;
-  color: #9ca3af;
+  position: relative;
+  z-index: 1;
 }

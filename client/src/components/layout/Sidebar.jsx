@@ -13,7 +13,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="hidden lg:flex flex-col w-20 bg-white shadow-lg h-screen fixed left-0 top-0 z-50 border-r border-gray-100">
+    <div className="hidden lg:flex flex-col w-20 bg-white shadow-lg h-screen fixed left-0 top-0 z-40 border-r border-gray-100 sidebar-container">
       {/* Logo */}
       <div className="flex justify-center items-center h-20 border-b border-gray-200">
         <svg 
@@ -40,7 +40,7 @@ const Sidebar = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`group relative p-3 rounded-xl transition-all duration-200 hover:bg-orange-50 ${
+              className={`group relative p-3 rounded-xl transition-all duration-200 hover:bg-orange-50 nav-button ${
                 isActive ? 'bg-orange-100 text-orange-600' : 'text-gray-600 hover:text-orange-600'
               }`}
               title={item.label}
