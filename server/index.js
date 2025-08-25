@@ -56,22 +56,6 @@ app.get('/test', async (req, res) => {
   }
 });
 
-// Endpoint simples para testar se as rotas estão funcionando
-app.get('/api/test', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'Rotas da API funcionando!',
-    timestamp: new Date().toISOString(),
-    routes: {
-      auth: '/api/auth',
-      usuarios: '/api/usuarios',
-      categorias: '/api/categorias',
-      produtos: '/api/produtos',
-      estabelecimentos: '/api/estabelecimentos'
-    }
-  });
-});
-
 // Função para inicializar as tabelas do sistema
 const initializeTables = async () => {
   try {

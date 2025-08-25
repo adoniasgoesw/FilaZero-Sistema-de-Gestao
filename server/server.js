@@ -67,23 +67,6 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Endpoint para testar se as rotas estão funcionando
-app.get('/api/test', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'Rotas da API funcionando!',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    routes: {
-      auth: '/api/auth',
-      usuarios: '/api/usuarios',
-      categorias: '/api/categorias',
-      produtos: '/api/produtos',
-      estabelecimentos: '/api/estabelecimentos'
-    }
-  });
-});
-
 // Middleware de tratamento de erros
 app.use((err, req, res, next) => {
   console.error('Erro na API:', err);
