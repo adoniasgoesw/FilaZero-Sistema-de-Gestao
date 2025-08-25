@@ -73,10 +73,10 @@ router.post('/register', register);
 // ===== ROTAS DE USUÁRIOS =====
 router.post('/usuarios', criarUsuario);
 router.get('/usuarios/estabelecimento/:estabelecimento_id', listarUsuarios);
+router.put('/usuarios/:id/senha', alterarSenha);
 router.get('/usuarios/:id', buscarUsuario);
 router.put('/usuarios/:id', atualizarUsuario);
 router.delete('/usuarios/:id', deletarUsuario);
-router.put('/usuarios/:id/senha', alterarSenha);
 
 // ===== ROTAS DE CATEGORIAS =====
 router.post('/categorias', upload.single('imagem'), criarCategoria);
