@@ -7,9 +7,98 @@ import InfoButton from '../buttons/InfoButton.jsx';
 import BackButton from '../buttons/BackButton.jsx';
 import { useNavigate } from 'react-router-dom';
 
+// Dados mock para desenvolvimento
+const MOCK_CATEGORIAS = [
+  {
+    id: 1,
+    nome: 'Bebidas',
+    cor: '#FF6B6B',
+    icone: '🥤',
+    imagem_url: null
+  },
+  {
+    id: 2,
+    nome: 'Pratos',
+    cor: '#4ECDC4',
+    icone: '🍽️',
+    imagem_url: null
+  },
+  {
+    id: 3,
+    nome: 'Sobremesas',
+    cor: '#45B7D1',
+    icone: '🍰',
+    imagem_url: null
+  },
+  {
+    id: 4,
+    nome: 'Entradas',
+    cor: '#96CEB4',
+    icone: '🥗',
+    imagem_url: null
+  }
+];
+
+const MOCK_PRODUTOS = [
+  {
+    id: 1,
+    nome: 'Coca-Cola 350ml',
+    valor_venda: 5.50,
+    categoria_id: 1,
+    imagem_url: null,
+    cor: '#FF6B6B',
+    icone: '🥤'
+  },
+  {
+    id: 2,
+    nome: 'X-Burger',
+    valor_venda: 18.90,
+    categoria_id: 2,
+    imagem_url: null,
+    cor: '#4ECDC4',
+    icone: '🍔'
+  },
+  {
+    id: 3,
+    nome: 'Sorvete de Chocolate',
+    valor_venda: 8.50,
+    categoria_id: 3,
+    imagem_url: null,
+    cor: '#45B7D1',
+    icone: '🍦'
+  },
+  {
+    id: 4,
+    nome: 'Salada Caesar',
+    valor_venda: 15.90,
+    categoria_id: 4,
+    imagem_url: null,
+    cor: '#96CEB4',
+    icone: '🥗'
+  },
+  {
+    id: 5,
+    nome: 'Pepsi 350ml',
+    valor_venda: 5.00,
+    categoria_id: 1,
+    imagem_url: null,
+    cor: '#FF6B6B',
+    icone: '🥤'
+  },
+  {
+    id: 6,
+    nome: 'X-Salada',
+    valor_venda: 22.90,
+    categoria_id: 2,
+    imagem_url: null,
+    cor: '#4ECDC4',
+    icone: '🍔'
+  }
+];
+
 const PainelItens = ({ 
   searchTerm, 
-  onSearchChange,
+  onSearchChange, 
   onInfoClick,
   onBackToHome,
   showInfoButton = true
@@ -22,7 +111,7 @@ const PainelItens = ({
   const [loading, setLoading] = useState(true);
   const [loadingProdutos, setLoadingProdutos] = useState(true);
   const [itensSelecionados, setItensSelecionados] = useState([]);
-
+  
   // Carregar categorias ao montar o componente
   useEffect(() => {
     carregarCategorias();
@@ -53,6 +142,9 @@ const PainelItens = ({
       }
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
+      // Usar dados mock em caso de erro
+      setCategorias(MOCK_CATEGORIAS);
+      setCategoriaSelecionada(MOCK_CATEGORIAS[0].id);
     } finally {
       setLoading(false);
     }
@@ -66,6 +158,8 @@ const PainelItens = ({
       setProdutos(response.data.produtos || []);
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
+      // Usar dados mock em caso de erro
+      setProdutos(MOCK_PRODUTOS);
     } finally {
       setLoadingProdutos(false);
     }
@@ -147,65 +241,65 @@ const PainelItens = ({
           </div>
         </div>
       </div>
-
+      
       {/* Categorias - Segundo, com scroll horizontal e barra invisível */}
       <div className="flex-shrink-0 p-3 sm:p-4 border-b border-gray-200 relative z-10">
-        {loading ? (
+          {loading ? (
           <div className="flex justify-center py-2">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
-          </div>
-        ) : (
+            </div>
+          ) : (
           <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide">
-            {categorias.map((categoria) => (
-              <div 
-                key={categoria.id} 
+                {categorias.map((categoria) => (
+                  <div 
+                    key={categoria.id} 
                 className="flex flex-col items-center cursor-pointer hover:scale-105 transition-transform outline-none focus:outline-none flex-shrink-0"
-                onClick={() => handleCategoriaClick(categoria.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    handleCategoriaClick(categoria.id);
-                  }
-                }}
-                tabIndex={0}
-              >
+                    onClick={() => handleCategoriaClick(categoria.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        handleCategoriaClick(categoria.id);
+                      }
+                    }}
+                    tabIndex={0}
+                  >
                 {/* Imagem ou Cor/Ícone - Redonda com borda azul */}
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-3 border-blue-500 overflow-hidden mb-2 flex items-center justify-center">
-                  {categoria.imagem_url ? (
-                    <>
-                      <img 
-                        src={`http://localhost:3001${categoria.imagem_url}`} 
-                        alt={categoria.nome}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                      <div 
+                      {categoria.imagem_url ? (
+                        <>
+                          <img 
+                            src={`http://localhost:3001${categoria.imagem_url}`} 
+                            alt={categoria.nome}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                          <div 
                         className="w-full h-full flex items-center justify-center text-lg sm:text-xl"
-                        style={{ backgroundColor: categoria.cor || '#FF6B6B', display: 'none' }}
-                      >
-                        {categoria.icone || '🏷️'}
-                      </div>
-                    </>
-                  ) : (
-                    <div 
+                            style={{ backgroundColor: categoria.cor || '#FF6B6B', display: 'none' }}
+                          >
+                            {categoria.icone || '🏷️'}
+                          </div>
+                        </>
+                      ) : (
+                        <div 
                       className="w-full h-full flex items-center justify-center text-lg sm:text-xl"
-                      style={{ backgroundColor: categoria.cor || '#FF6B6B' }}
-                    >
-                      {categoria.icone || '🏷️'}
+                          style={{ backgroundColor: categoria.cor || '#FF6B6B' }}
+                        >
+                          {categoria.icone || '🏷️'}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                
-                {/* Nome da Categoria */}
+                    
+                    {/* Nome da Categoria */}
                 <div className="text-xs font-medium text-gray-700 text-center max-w-14 sm:max-w-16 leading-tight truncate">
-                  {categoria.nome}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                      {categoria.nome}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
       </div>
       
       {/* Listagem de Produtos - Terceiro, cards organizados */}
@@ -264,7 +358,7 @@ const PainelItens = ({
                   {/* Nome do Produto - Sem cortes, altura flexível */}
                   <div className="text-sm font-medium text-gray-900 mb-2 leading-tight text-left flex-1 min-h-0">
                     <div className="line-clamp-2 break-words">
-                      {produto.nome}
+                    {produto.nome}
                     </div>
                   </div>
                   
@@ -280,7 +374,7 @@ const PainelItens = ({
           <div className="flex items-center justify-center h-full text-center text-gray-500">
             <div>
               <p className="text-base sm:text-lg mb-2">Nenhum produto encontrado.</p>
-              <p className="text-sm">Selecione uma categoria para ver os produtos.</p>
+            <p className="text-sm">Selecione uma categoria para ver os produtos.</p>
             </div>
           </div>
         )}
@@ -295,10 +389,10 @@ const PainelItens = ({
               <InfoButton onClick={handleInfo} />
             </div>
           )}
-          
+            
           {/* Espaçador invisível para telas grandes */}
           <div className="hidden lg:block"></div>
-          
+            
           {/* Botões Salvar e Cancelar */}
           <div className="flex gap-3">
             <button

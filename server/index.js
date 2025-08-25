@@ -22,7 +22,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Rotas - todas consolidadas no authRoutes
+// TODAS AS ROTAS DA API CONSOLIDADAS NO authRoutes
 app.use('/api', authRoutes);
 
 // Rota de teste
@@ -63,6 +63,7 @@ app.get('/api/test', (req, res) => {
     message: 'Rotas da API funcionando!',
     timestamp: new Date().toISOString(),
     routes: {
+      auth: '/api/auth',
       usuarios: '/api/usuarios',
       categorias: '/api/categorias',
       produtos: '/api/produtos',
